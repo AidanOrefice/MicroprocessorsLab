@@ -17,8 +17,8 @@ Initial	    ;Choosing pins on PORTD and set to high
 	    movlw 0x00		    ;Setting all bits to 0. Only using 0 to 3
 	    movwf TRISD, ACCESS	    ;Sets TRISD to zeroes
 	    movlw .15		    ;Sets RD0 through to RD3 to 1s
-	    movwf PORTD, ACCESS
-	    call TriE
+	    movwf PORTD, ACCESS	    ;Sends this to PORTD
+	    call TriE		    ;TriState PORTE- for safety
 	    return
 
 Read1	    ;OE* of desires address to low, other stays high
@@ -26,7 +26,7 @@ Read1	    ;OE* of desires address to low, other stays high
 	    call TriE		    ;Set PORTE to tri-state
 	    bsf PORTD, 1	    ;Hard set bit 1 to 1
 	    bcf PORTD, 0	    ;Sets bit 0 to 0 in PORTD
-	    call Output
+	    call Output		    ;outputs to PORT C
 	    return
 	    
 Read2	    ;OE* of desires address to low, other stays high
@@ -34,7 +34,7 @@ Read2	    ;OE* of desires address to low, other stays high
 	    call TriE		    ;Set PORTE to tri-state
 	    bsf PORTD, 0	    ;Hard set bit 0 to 1
 	    bcf PORTD, 1	    ;Sets bit 1 to 0 in PORTD
-	    call Output
+	    call Output		    ;outputs to PORT C
 	    return
 	    
 Write1	    ;Both OE* high
@@ -55,7 +55,7 @@ Write1	    ;Both OE* high
 Write2	   
 	    bsf PORTD, 0    ;set EO1* high  
 	    bsf PORTD, 1    ;set E02* high
-	    clrf TRISE	    ;set PORTE to input
+	    clrf TRISE	    ;set PORTE to output
 	    call DataSet    ;sending data to PORTE
 	    bcf PORTD, 3    ;set cp2 to low
 	    call Delay	    ;delay for 250ns
@@ -63,27 +63,27 @@ Write2
 	    call TriE	    ;set PORTE to tri-state
 	    return    
 	
-DataSet	    clrf PORTE
-	    movlw .219	    
+DataSet	    clrf PORTE	    ;clearing PORTE 
+	    movlw .219	    ;some arbitary value to read and output
 	    movwf PORTE, ACCESS	;sent data to PORTE
 	    return
 	   
 	    
-Delay	    movlw .3
-    	    movwf 0x60
-    Loop	decfsz  0x60   ;delaying with 3 operations
-		bra Loop
+Delay	    movlw .3	    ;delays 3 for 3 operations
+    	    movwf 0x60	    ;data location
+    Loop	decfsz  0x60   ;decrementing value at data location.
+		bra Loop       
 		return
 	return
 	
-TriE	setf TRISE
-	banksel PADCFG1
+TriE	setf TRISE	    ;rotuine to set PORTE to tri-state
+	banksel PADCFG1	    
 	bsf PADCFG1, REPU, BANKED
 	movlb 0x00
 	return
 
 Output	
-	clrf TRISC
+	clrf TRISC		;output to PORTC
 	movff PORTE, PORTC
 	return
 	
