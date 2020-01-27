@@ -3,7 +3,7 @@
     global  UART_Setup, UART_Transmit_Message
 
 acs0    udata_acs	    ; named variables in access ram
-UART_counter res 1	    ; reserve 1 byte for variable UART_counter
+UART_counter res 1	    ; reserve 1 byte for variable UART_counter, linker chooses address
 
 UART    code
     
