@@ -1,21 +1,21 @@
 	#include p18f87k22.inc
 
 	extern	UART_Setup, UART_Transmit_Message  ; external UART subroutines
-	extern  LCD_Setup, LCD_Write_Message	    ; external LCD subroutines
+	extern  LCD_Setup, LCD_Write_Message, LCD_Clear, LCD_Write_Line1, LCD_Write_Line2	    ; external LCD subroutines
 	
 acs0	udata_acs   ; reserve data space in access ram
 counter	    res 1   ; reserve one byte for a counter variable
 delay_count res 1   ; reserve one byte for counter in the delay routine
 
 tables	udata	0x400    ; reserve data anywhere in RAM (here at 0x400)
-myArray res 0x80    ; reserve 128 bytes for message data
+myArray res 0x80    ; reserve 128 bytes for message data- in ACCESS
 
 rst	code	0    ; reset vector
 	goto	setup
 
 pdata	code    ; a section of programme memory for storing data
 	; ******* myTable, data in programme memory, and its length *****
-myTable data	    "Hello World!\n"	; message, plus carriage return
+myTable data	    " Wenger Out!\n"	; message, plus carriage return
 	constant    myTable_l=.13	; length of data
 	
 main	code
@@ -27,7 +27,8 @@ setup	bcf	EECON1, CFGS	; point to Flash program memory
 	goto	start
 	
 	; ******* Main programme ****************************************
-start 	lfsr	FSR0, myArray	; Load FSR0 with address in RAM	
+start 	call	LCD_Write_Line1
+	lfsr	FSR0, myArray	; Load FSR0 with address in RAM	
 	movlw	upper(myTable)	; address of data in PM
 	movwf	TBLPTRU		; load upper bits to TBLPTRU
 	movlw	high(myTable)	; address of data in PM
@@ -48,6 +49,8 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	movlw	myTable_l	; output message to UART
 	lfsr	FSR2, myArray
 	call	UART_Transmit_Message
+	
+	;call LCD_Clear          ;Clear Screen
 
 	goto	$		; goto current line in code
 
