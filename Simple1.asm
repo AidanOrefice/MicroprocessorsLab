@@ -1,7 +1,8 @@
 	#include p18f87k22.inc
 
 	extern	UART_Setup, UART_Transmit_Message  ; external UART subroutines
-	extern  LCD_Setup, LCD_Write_Message, LCD_Clear, LCD_Write_Line1, LCD_Write_Line2	    ; external LCD subroutines
+	extern  LCD_Setup, LCD_Write_Message, LCD_Clear, LCD_Write_Line1, LCD_Write_Line2, LCD_Send_Byte_D	    ; external LCD subroutines
+	extern  Keyboard_Setup, Keyboard_Read, Store_Decode
 	
 acs0	udata_acs   ; reserve data space in access ram
 counter	    res 1   ; reserve one byte for a counter variable
@@ -15,8 +16,8 @@ rst	code	0    ; reset vector
 
 pdata	code    ; a section of programme memory for storing data
 	; ******* myTable, data in programme memory, and its length *****
-myTable data	    " Wenger Out!\n"	; message, plus carriage return
-	constant    myTable_l=.13	; length of data
+myTable data	    " Yes!\n"	; message, plus carriage return
+	constant    myTable_l=.6	; length of data
 	
 main	code
 	; ******* Programme FLASH read Setup Code ***********************
@@ -50,10 +51,16 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	lfsr	FSR2, myArray
 	call	UART_Transmit_Message
 	
+	call LCD_Write_Line2	;output same message to line 2
+	call Keyboard_Read
+	movf Store_Decode, W
+	call LCD_Send_Byte_D
+	
 	;call LCD_Clear          ;Clear Screen
 
-	goto	$		; goto current line in code
-
+	goto	start		    
+	;goto $			    ; goto current line in code
+	
 	; a delay subroutine if you need one, times around loop in delay_count
 delay	decfsz	delay_count	; decrement until zero
 	bra delay
