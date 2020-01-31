@@ -1,7 +1,9 @@
 	#include p18f87k22.inc
 
-	extern	UART_Setup, UART_Transmit_Message  ; external UART subroutines
-	extern  LCD_Setup, LCD_Write_Message, LCD_Clear, LCD_Write_Line1, LCD_Write_Line2, LCD_Send_Byte_D	    ; external LCD subroutines
+	extern  LCD_Setup, LCD_Write_Message, LCD_Write_Hex
+	extern  LCD_Clear, LCD_Write_Line1, LCD_Write_Line2, LCD_Send_Byte_D
+	extern	UART_Setup, UART_Transmit_Message   ; external UART subroutines
+	extern  ADC_Setup, ADC_Read		    ; external ADC routines
 	extern  Keyboard_Setup, Keyboard_Read, Store_Decode
 	
 acs0	udata_acs   ; reserve data space in access ram
@@ -25,6 +27,7 @@ setup	bcf	EECON1, CFGS	; point to Flash program memory
 	bsf	EECON1, EEPGD 	; access Flash program memory
 	call	UART_Setup	; setup UART
 	call	LCD_Setup	; setup LCD
+	call	ADC_Setup	; setup ADC
 	goto	start
 	
 	; ******* Main programme ****************************************
@@ -51,16 +54,14 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	lfsr	FSR2, myArray
 	call	UART_Transmit_Message
 	
-	call LCD_Write_Line2	;output same message to line 2
-	call Keyboard_Read
-	movf Store_Decode, W
-	call LCD_Send_Byte_D
-	
-	;call LCD_Clear          ;Clear Screen
+measure_loop
+	call	ADC_Read
+	movf	ADRESH,W
+	call	LCD_Write_Hex
+	movf	ADRESL,W
+	call	LCD_Write_Hex
+	goto	measure_loop		; goto current line in code
 
-	goto	start		    
-	;goto $			    ; goto current line in code
-	
 	; a delay subroutine if you need one, times around loop in delay_count
 delay	decfsz	delay_count	; decrement until zero
 	bra delay
