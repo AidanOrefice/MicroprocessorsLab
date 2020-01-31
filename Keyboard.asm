@@ -118,7 +118,8 @@ Check_4_Row
 	movwf Decode_Value
 	return
 
-Keyboard_Write
+Keyboard_Write ;Lost loop to write to successive DDRAM addresses
+		; initialise address- send data, increment address
 	movlw	.255
 	cpfslt	Full_Read
 	goto Keyboard_Read
