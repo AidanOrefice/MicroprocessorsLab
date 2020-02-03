@@ -1,10 +1,15 @@
 #include p18f87k22.inc
 
+;possible extensions: use FSRS and subroutine to check and correct carry
+		    ; sort naming out
+    
 acs0    udata_acs 
 eight res 1
 sixteen res 2
 sixteen1 res 2
 sixteen2 res 2
+
+twenty_four res 3
  
 twenty_four_result res 3
 
@@ -90,23 +95,61 @@ steen_multi
 
     return
     
+eight_twenty_four_multi
+    ;whats in w is 'eight'.
+    movwf eight
+    movf eight, W
+    mulwf twenty_four + 2	;multiplt 8bit by lower byte of 24bit
+    movff PRODL, thirty_two_result + 3	    ;store in lowest byte of result.
     
-steen_shift
-twenty_fourt_shift
+    movff PRODH, temp1	;keep high byte to add later.
+   
+    movf eight, W   ;multiply using higher byte of 16bit.
+    mulwf twenty_four
+    
+    movff PRODH, thirty_two_result
+    
+    movff PRODL, temp2
+   
+    movf eight, W
+    mulwf twenty_four +1
+    
+    movf PRODH, W
+    addwf temp2
+    movff temp2, thirty_two_result + 1
+    movlw .1		
+    btfsc STATUS, C
+    addwf thirty_two_result
+    
+    movf PRODL, W
+    addwf temp1
+    movff temp1, thirty_two_result + 2
+    
+    movlw .1		
+    btfsc STATUS, C
+    addwf thirty_two_result + 1
+    
+    movlw .1		;checks for the double carry when addting to mid-upper byte.
+    btfsc STATUS, C
+    addwf thirty_two_result
+    
+    
+    
+    
+    
+    
     
     
 start
-    movlw 0xAB ;0xABC3
-    movwf sixteen1
-    movlw 0xC3
-    movwf sixteen1 + 1
+    movlw 0x49
+    movwf twenty_four  
+    movlw 0xAC
+    movwf twenty_four + 1 
+    movlw 0xE2
+    movwf twenty_four + 2
     
-    movlw 0x46	;0x46F4
-    movwf sixteen2
-    movlw 0xF4
-    movwf sixteen2 + 1
-    
-    call steen_multi
+    movlw 0xB6
+    call eight_twenty_four_multi
     
     goto start
     
