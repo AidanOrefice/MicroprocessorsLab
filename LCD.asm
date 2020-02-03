@@ -1,4 +1,4 @@
-#include p18f87k22.inc
+ #include p18f87k22.inc
 
     global  LCD_Setup, LCD_Write_Message, LCD_Write_Hex
     global  LCD_Clear, LCD_Write_Line1, LCD_Write_Line2, LCD_Send_Byte_D
