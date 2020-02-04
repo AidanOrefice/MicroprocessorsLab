@@ -5,6 +5,10 @@
 	extern	UART_Setup, UART_Transmit_Message   ; external UART subroutines
 	extern  ADC_Setup, ADC_Read		    ; external ADC routines
 	extern  Keyboard_Setup, Keyboard_Read, Store_Decode
+	;extern  steen_multi, eight_twenty_four_multi
+	;extern  sixteen1, sixteen2, twenty_four
+	;extern  twenty_four_result, thirty_two_result
+	extern Hex_to_dec_converter, decimal_result
 	
 acs0	udata_acs   ; reserve data space in access ram
 counter	    res 1   ; reserve one byte for a counter variable
@@ -46,21 +50,22 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	decfsz	counter		; count down to zero
 	bra	loop		; keep going until finished
 		
-	movlw	myTable_l-1	; output message to LCD (leave out "\n")
-	lfsr	FSR2, myArray
-	call	LCD_Write_Message
+	;movlw	myTable_l-1	; output message to LCD (leave out "\n")
+	;lfsr	FSR2, myArray
+	;all	LCD_Write_Message
 	
-	movlw	myTable_l	; output message to UART
-	lfsr	FSR2, myArray
-	call	UART_Transmit_Message
+	;movlw	myTable_l	; output message to UART
+	;lfsr	FSR2, myArray
+	;call	UART_Transmit_Message
 	
 measure_loop
 	call	ADC_Read
-	movf	ADRESH,W
+	call	Hex_to_dec_converter
+	movf	decimal_result, W
 	call	LCD_Write_Hex
-	movf	ADRESL,W
+	movf	decimal_result + 1,W
 	call	LCD_Write_Hex
-	goto	measure_loop		; goto current line in code
+	goto	start		; goto current line in code
 
 	; a delay subroutine if you need one, times around loop in delay_count
 delay	decfsz	delay_count	; decrement until zero
