@@ -138,7 +138,7 @@ eight_twenty_four_multi		;need to define twenty four
     movlw .1		;checks for the double carry when addting to mid-upper byte.
     btfsc STATUS, C
     addwf thirty_two_result
-    
+    return
     
 Hex_to_dec_converter	;two inputs: ADRESH (first four bits), ADRESL - both 8 bit
     movlw 0x00
