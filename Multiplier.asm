@@ -3,6 +3,13 @@
 ;possible extensions: use FSRS and subroutine to check and correct carry
 		    ; sort naming out
     
+		    
+;global steen_multi, eight_twenty_four_multi
+;global sixteen1, sixteen2, twenty_four
+;global twenty_four_result, thirty_two_result
+
+    global Hex_to_dec_converter, decimal_result
+		    
 acs0    udata_acs 
 eight res 1
 sixteen res 2
@@ -17,6 +24,8 @@ twenty_four_result1 res 3
 twenty_four_result2 res 3
  
 thirty_two_result  res 4
+
+decimal_result res 2	    ;to store the decimal result (byte per decimal)
   
 temp1 res 1
 temp2 res 1
@@ -25,9 +34,7 @@ temp2 res 1
 ;sixtenn ~ lower byte, sixteen + 1 ~ upper byte
  
 Multiply    code
-
-    goto start 
-    
+  
 eight_steen_multi   ;routine to multiply 8bit by 16bit number
     ;whats in w is 'eight'.
     movwf eight
@@ -51,7 +58,7 @@ eight_steen_multi   ;routine to multiply 8bit by 16bit number
     addwf twenty_four_result
     return
     
-steen_multi
+steen_multi			;need to define sixteen1 and sixteen2
     movf sixteen1 + 1, W	;using lower byte of 16bit
     movff sixteen2, sixteen	;storing other 16bit for subroutine. - HERE
     movff sixteen2 + 1, sixteen + 1
@@ -95,9 +102,8 @@ steen_multi
 
     return
     
-eight_twenty_four_multi
-    ;whats in w is 'eight'.
-    movwf eight
+eight_twenty_four_multi		;need to define twenty four 
+    movwf eight			;eight is defined in w
     movf eight, W
     mulwf twenty_four + 2	;multiplt 8bit by lower byte of 24bit
     movff PRODL, thirty_two_result + 3	    ;store in lowest byte of result.
@@ -134,23 +140,45 @@ eight_twenty_four_multi
     addwf thirty_two_result
     
     
+Hex_to_dec_converter	;two inputs: ADRESH (first four bits), ADRESL - both 8 bit
+    movlw 0x00
+    movwf decimal_result
+    movwf decimal_result + 1
     
-    
-    
-    
-    
-    
-start
-    movlw 0x49
-    movwf twenty_four  
-    movlw 0xAC
-    movwf twenty_four + 1 
-    movlw 0xE2
-    movwf twenty_four + 2
-    
-    movlw 0xB6
+    movff ADRESH, sixteen1
+    movff ADRESL, sixteen1 + 1
+    movlw 0x41
+    movwf sixteen2
+    movlw 0x8a
+    movwf sixteen2 + 1
+    call steen_multi
+    call Manipulate_Value
+    addwf decimal_result
+    swapf decimal_result
+   
+    movlw 0x0A
     call eight_twenty_four_multi
+    call Manipulate_Value
+    addwf decimal_result
     
-    goto start
+    movlw 0x0A
+    call eight_twenty_four_multi
+    call Manipulate_Value
+    addwf decimal_result + 1
+    swapf decimal_result + 1
+
+    movlw 0x0A
+    call eight_twenty_four_multi
+    call Manipulate_Value
+    addwf decimal_result + 1
+    return
+    
+Manipulate_Value	;To select the most significant bit and the remainder
+    movff thirty_two_result + 1, twenty_four
+    movff thirty_two_result + 2, twenty_four + 1
+    movff thirty_two_result + 3, twenty_four + 2
+    movf thirty_two_result, W
+    return
+  
     
     end
