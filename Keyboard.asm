@@ -78,7 +78,7 @@ Check_1_Row
 	btfss Full_Read, 1
 	movlw '7'
 	btfss Full_Read, 0
-	movlw 'A'
+	movlw 'A'   ;Empty Button
 	movwf Decode_Value
 	return
 	
@@ -102,19 +102,19 @@ Check_3_Row
 	btfss Full_Read, 1
 	movlw '9'
 	btfss Full_Read, 0
-	movlw 'B'
+	movlw 'B' ;Potential for distortion.
 	movwf Decode_Value
 	return
 	
 Check_4_Row
 	btfss Full_Read, 3
-	movlw 'F'
+	movlw 'F'   ;Multiplier
 	btfss Full_Read, 2
-	movlw 'E'
+	movlw 'E'   ;Multiplier
 	btfss Full_Read, 1
-	movlw 'D'
+	movlw 'D'   ;Multiplier
 	btfss Full_Read, 0
-	movlw 'C'
+	movlw 'C'   ;Send
 	movwf Decode_Value
 	return
 
