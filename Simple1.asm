@@ -10,7 +10,7 @@
 	;extern  twenty_four_result, thirty_two_result
 	extern Hex_to_dec_converter, decimal_result
 	
-acs0	udata_acs   ; reserve data space in access ram
+acs0	udata_acs   ; r            eserve data space in access ram
 counter	    res 1   ; reserve one byte for a counter variable
 delay_count res 1   ; reserve one byte for counter in the delay routine
 
