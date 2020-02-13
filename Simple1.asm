@@ -22,8 +22,8 @@ rst	code	0    ; reset vector
 
 pdata	code    ; a section of programme memory for storing data
 	; ******* myTable, data in programme memory, and its length *****
-myTable data	    " Yes!\n"	; message, plus carriage return
-	constant    myTable_l=.6	; length of data
+myTable data	    " D-TIME\n"	; message, plus carriage return
+	constant    myTable_l=.8	; length of data
 	
 main	code
 	; ******* Programme FLASH read Setup Code ***********************
@@ -32,6 +32,7 @@ setup	bcf	EECON1, CFGS	; point to Flash program memory
 	call	UART_Setup	; setup UART
 	call	LCD_Setup	; setup LCD
 	call	ADC_Setup	; setup ADC
+	clrf	TRISH
 	goto	start
 	
 	; ******* Main programme ****************************************
