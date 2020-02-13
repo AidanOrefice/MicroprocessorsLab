@@ -170,9 +170,9 @@ Hex_to_dec_converter	;two inputs: ADRESH (first four bits), ADRESL - both 8 bit
     movlw 0x0A
     call eight_twenty_four_multi
     call Manipulate_Value
-    addwf decimal_result + 
+    addwf decimal_result + 1
     
-    1
+
     return
     
 Manipulate_Value	;To select the most significant bit and the remainder
