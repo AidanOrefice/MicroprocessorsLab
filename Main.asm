@@ -4,7 +4,7 @@
  
 
 ;extern ADC_Setup, ADC_Read
-    extern  Keyboard_Setup, Keyboard_Read, Store_Decode
+    extern  Keyboard_Setup, Keyboard_Read, Store_Decode, Keyboard_Initial
     extern  LCD_Setup, LCD_Write_Message, LCD_Write_Hex
     extern  LCD_Clear, LCD_Write_Line1, LCD_Write_Line2, LCD_Send_Byte_D, LCD_Preset
     extern  LCD_delay_ms
@@ -15,10 +15,18 @@
 main code
  
  
-start  call LCD_Setup
+start	movlw b'10000000'
+	movwf TRISJ
+	
+	call LCD_Setup
 	call LCD_Preset
+	call Keyboard_Setup
+	call Keyboard_Initial
+	btfsc PORTJ, 7
+	call Keyboard_Read
     
-    end 
+    goto start 
 
 
 
+    end
