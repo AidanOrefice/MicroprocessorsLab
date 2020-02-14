@@ -4,6 +4,8 @@
     global  LCD_Clear, LCD_Write_Line1, LCD_Write_Line2, LCD_Send_Byte_D, LCD_Preset
     global  LCD_delay_ms
     extern  Keyboard_Read
+    extern Delay_Time
+    global LCD_Delay_Write 
 	
 acs0    udata_acs   ; named variables in access ram
 LCD_cnt_l   res 1   ; reserve 1 byte for variable LCD_cnt_l
@@ -135,7 +137,8 @@ LCD_Enable	    ; pulse enable bit LCD_E for 500ns
 LCD_Clear 
 	movlw b'00000001'
 	call LCD_Send_Byte_I
-	goto LCD_Preset
+	call LCD_Preset
+	return
 	
 myTable data	    " D-TIME:\n"	; message, plus carriage return
 	constant    myTable_l=.9	; length of data
@@ -158,7 +161,8 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	movlw	myTable_l-1	; output message to LCD (leave out "\n")
 	lfsr	FSR2, myArray
 	call	LCD_Write_Message
-	goto	Keyboard_Read
+	
+	return
 	
 
 LCD_Write_Line1			    
@@ -169,6 +173,29 @@ LCD_Write_Line1
 LCD_Write_Line2
 	movlw b'11000000'	    ;Address is 1100.... for bottom line
 	call LCD_Send_Byte_I
+	return
+
+LCD_Delay_Write 
+	movlw b'10001000'	    ;Hard sending a keyboard press 
+	call LCD_Send_Byte_I
+	movf Delay_Time, W
+	call LCD_Write_Hex
+	
+	movlw b'10001001'	    ;Hard sending a keyboard press 
+	call LCD_Send_Byte_I
+	movf Delay_Time +1, W
+	call LCD_Write_Hex
+	
+	movlw b'10001010'	    ;Hard sending a keyboard press 
+	call LCD_Send_Byte_I
+	movf Delay_Time +2, W
+	call LCD_Write_Hex
+	
+	movlw b'10001011'	    ;Hard sending a keyboard press 
+	call LCD_Send_Byte_I
+	movf Delay_Time+3, W
+	call LCD_Write_Hex
+	
 	return
 	
 ; ** a few delay routines below here as LCD timing can be quite critical ****
