@@ -30,6 +30,8 @@ decimal_result res 2	    ;to store the decimal result (byte per decimal)
 temp1 res 1
 temp2 res 1
 
+Dec_Hex_Temp res 3
+
 
 ;sixtenn ~ lower byte, sixteen + 1 ~ upper byte
  
@@ -174,6 +176,27 @@ Hex_to_dec_converter	;two inputs: ADRESH (first four bits), ADRESL - both 8 bit
     
 
     return
+Dec_to_Hex_Converter_Decay
+    movlw   0x03
+    movwf   sixteen
+    movlw   0xE8
+    movwf   sixteen + 1
+    
+    movf    Decay_Time, W
+    call    eight_steen_multi
+    ;result stored in twenty_four_result
+    
+    movlw   0x64 ; multiply by 100
+    mulwf   Decay_Time + 1
+    ;result is in PRODH:PRODL
+    movf    PRODH, W
+    ;Now add to twenty_four_result + 1
+    ;add PRODL, twenty_four_result + 2
+    
+    
+    
+    
+    
     
 Manipulate_Value	;To select the most significant bit and the remainder
     movff thirty_two_result + 1, twenty_four
@@ -181,6 +204,8 @@ Manipulate_Value	;To select the most significant bit and the remainder
     movff thirty_two_result + 3, twenty_four + 2
     movf thirty_two_result, W
     return
+    
+    
   
     
     end
