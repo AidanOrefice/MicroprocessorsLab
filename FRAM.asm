@@ -1,5 +1,6 @@
 #include p18f87k22.inc
 
+	 extern Delay_Time
     
     
 ;acs0    udata_acs ;permanent variables
