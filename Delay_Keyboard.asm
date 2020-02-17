@@ -18,6 +18,8 @@ Decode_Value res 1
 Delay_Time res 4
 temp_decode res 1
 temp_counter res 1
+ 
+temp_press res 1
 
 
  
@@ -48,28 +50,33 @@ Keyboard_Initial
     
 Keyboard_Read			    ;originally set to read rows- unsure of column- diagram given in slides.
     call    Keyboard_Setup
+    movlw   .15
+    movff   PORTE, temp_press	    ;This checks whether a button has been pressed so we can proceed with rest of program.
+    subwf   temp_press
+    movlw   .0
+    cpfsgt  temp_press
+    goto    Keyboard_Read
     movff   PORTE, Row_Read	    
     movlw   0xF0
     movwf   TRISE
-    movlw   .125
-    call    delay_x4us		    ;Delay of 0.5ms
+    movlw   .50
+    call    delay_ms		    ;Delay of 0.5ms
     movff   PORTE, Col_Read
-    movlw   .05
+    movlw   .50
     call    delay_ms
     movf    Row_Read, W
     addwf   Col_Read, W
     movwf   Full_Read		    ;storing to one value
-    movlw   .05
+    movlw   .25
+    
     call    delay_ms
     call    Keyboard_Decode
-    movlw   .05
+    movlw   .250	    ;This delay limits speed of press- ensures cant go back to top with same button press. This would get through the button press check. 
     call    delay_ms
-    
-    call    Keyboard_Write ; To conplete loop.
-    
+    call    Keyboard_Write ; To complete loop.
     call    LCD_Delay_Write
-   
     call    Wait_loop
+    
     return
     
 Wait_loop    
@@ -131,7 +138,7 @@ Check_4_Row
 	btfss	Full_Read, 3
 	movlw	0xFF		    ; F currently has no function in our system
 	btfss	Full_Read, 2
-	movlw	0xFF		    ; E currently has no function in our system- become the enter button
+	goto	LCD_Delay_Write		    ; E currently has no function in our system- become the enter button
 	btfss	Full_Read, 1
 	movlw	0xFF
 	btfss	Full_Read, 0
@@ -145,19 +152,17 @@ Keyboard_Write		    ;Lost loop to write to successive DDRAM addresses - initiali
 	movlw	.255		;stops no input
 	cpfslt	Full_Read
 	goto	Keyboard_Read
+	movlw	.255
 	cpfslt	Decode_Value	;stops invalid answer
 	goto	Keyboard_Read
 	movff	Decode_Value, Store_Decode
 	
-	movf	Store_Decode, W		;store_decode- wont ever be greater than ee. 
-	subwf	temp_decode		;thus subtraction will give 0 or higher
-	movlw	0x00			;Stops repeated answers
-	cpfsgt	temp_decode		    
-	goto	Keyboard_Read
+	;movf	Store_Decode, W		;store_decode- wont ever be greater than ee. 
+	;subwf	temp_decode		;thus subtraction will give 0 or higher
+	;movlw	0x00			;Stops repeated answers
+	;cpfsgt	temp_decode		    
+	;goto	Keyboard_Read
 	
-
-	
-
 	movff Store_Decode, POSTINC0
 	
 	dcfsnz temp_counter
@@ -169,6 +174,8 @@ Keyboard_Clear
 	call LCD_Clear
 	goto Keyboard_Read
 	
+; ONLY DELAYS PAST THIS POINT 
+
 delay_ms			; delay given in ms in W
 	movwf	cnt_ms
 	call DL2
