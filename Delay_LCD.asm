@@ -1,7 +1,7 @@
 #include p18f87k22.inc
 
     global  LCD_Setup, LCD_Write_Message, LCD_Write_Hex
-    global  LCD_Clear, LCD_Write_Line1, LCD_Write_Line2, LCD_Send_Byte_D, LCD_Preset
+    global  LCD_Clear, LCD_Write_Line1, LCD_Write_Line2, LCD_Send_Byte_D, LCD_Preset, LCD_Delay_Write 
     global  LCD_delay_ms
     extern  Keyboard_Read
     extern Delay_Time
