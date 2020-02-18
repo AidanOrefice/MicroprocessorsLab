@@ -29,13 +29,13 @@ temp_limit res 1
 Delay_Keyboard    code
     
 Keyboard_Setup
-    setf    TRISF			    ;rotuine to set PORTJ to tri-state
+    setf    TRISE			    ;rotuine to set PORTJ to tri-state
     banksel PADCFG1    
     bsf	    PADCFG1, REPU, BANKED
     movlb   0x00			    
-    clrf    LATF
+    clrf    LATE
     movlw   0x0F			    ; Sets J4-7 to output/J0-3 to input
-    movwf   TRISF
+    movwf   TRISE
     movlw   .125			    ; Delay time/4
     call    delay_x4us		    ; Delay of 0.5ms
     return
@@ -54,17 +54,17 @@ Keyboard_Initial
 Keyboard_Read			    ;originally set to read rows- unsure of column- diagram given in slides.
     call    Keyboard_Setup
     movlw   .155
-    movff   PORTF, temp_press	    ;This checks whether a button has been pressed so we can proceed with rest of program.
+    movff   PORTE, temp_press	    ;This checks whether a button has been pressed so we can proceed with rest of program.
     subwf   temp_press
     movlw   .0
     cpfsgt  temp_press
     goto    Keyboard_Read
-    movff   PORTF, Row_Read	    
+    movff   PORTE, Row_Read	    
     movlw   0xF0
-    movwf   TRISF
+    movwf   TRISE
     movlw   .50
     call    delay_ms		    ;Delay of 0.5ms
-    movff   PORTF, Col_Read
+    movff   PORTE, Col_Read
     movlw   .50
     call    delay_ms
     movf    Row_Read, W
@@ -223,36 +223,3 @@ Keyboard_Clear
 	goto Keyboard_Read
 	
 ; ONLY DELAYS PAST THIS POINT 
-
-delay_ms			; delay given in ms in W
-	movwf	cnt_ms
-	call DL2
-	return
-DL2	movlw	.250		; 1 ms delay
-	call	delay_x4us	
-	decfsz	cnt_ms
-	bra	DL2
-	return
-    
-delay_x4us			; delay given in chunks of 4 microsecond in W
-	movwf	cnt_l		; now need to multiply by 16
-	swapf   cnt_l,F		; swap nibbles
-	movlw	0x0f	   
-	andwf	cnt_l,W		; move low nibble to W
-	movwf	cnt_h		; then to LCD_cnt_h
-	movlw	0xf0	    
-	andwf	cnt_l,F		; keep high nibble in cnt_l
-	call	delay
-	return    
-      
-delay				; delay routine	4 instruction loop == 250ns	    
-	movlw 	0x00		; W=0
-	call DL1
-	return
-DL1	decf 	cnt_l,F		; no carry when 0x00 -> 0xff
-	subwfb 	cnt_h,F		; no carry when 0x00 -> 0xff
-	bc 	DL1		; carry, then loop again
-	return			; carry reset so return
-
-
-    end
