@@ -8,7 +8,10 @@
 ;global sixteen1, sixteen2, twenty_four
 ;global twenty_four_result, thirty_two_result
 
-    global Hex_to_dec_converter, decimal_result
+    global Hex_to_dec_converter, decimal_result, Dec_to_Hex_Converter_Delay
+    global Converted_Delay_Time
+    
+    extern  Delay_Time
 		    
 acs0    udata_acs 
 eight res 1
@@ -26,6 +29,8 @@ twenty_four_result2 res 3
 thirty_two_result  res 4
 
 decimal_result res 2	    ;to store the decimal result (byte per decimal)
+  
+Converted_Delay_Time res 2
   
 temp1 res 1
 temp2 res 1
@@ -176,22 +181,50 @@ Hex_to_dec_converter	;two inputs: ADRESH (first four bits), ADRESL - both 8 bit
     
 
     return
-Dec_to_Hex_Converter_Decay
-    movlw   0x03
+Dec_to_Hex_Converter_Delay  
+    movlw   0x03			    ; multiply by 1000 (0x3e8)
     movwf   sixteen
     movlw   0xE8
     movwf   sixteen + 1
     
-    movf    Decay_Time, W
+    movf    Delay_Time, W		    ;First byte of decay time - gives 24bt result
     call    eight_steen_multi
     ;result stored in twenty_four_result
     
-    movlw   0x64 ; multiply by 100
-    mulwf   Decay_Time + 1
+    movlw   0x64			    ; multiply by 100 (0x64)
+    mulwf   Delay_Time + 1
     ;result is in PRODH:PRODL
-    movf    PRODH, W
-    ;Now add to twenty_four_result + 1
-    ;add PRODL, twenty_four_result + 2
+    call    Delay_Add
+    
+    movlw   0x0A
+    mulwf   Delay_Time	+ 2
+    call    Delay_Add
+    
+    movlw   0x01
+    mulwf   Delay_Time	+ 3
+    call    Delay_Add
+    
+    movff   twenty_four_result, Converted_Delay_Time
+    movff   twenty_four_result +1, Converted_Delay_Time +1
+   
+    ;Not Required as answer will be less than 9000
+    ;movff   twenty_four_result +2, Converted_Delay_Time +2
+        
+Delay_Add    
+    movf    PRODH, W			    ;Full add routine
+    addwf   twenty_four_result + 1
+    movlw   .1		
+    btfsc   STATUS, C			    ;Checking if there is a carry- if yes: add one to next upper byte.
+    addwf   twenty_four_result
+    movf    PRODL, W
+    addwf   twenty_four_result + 2
+    movlw   .1		
+    btfsc   STATUS, C			    ;Checking if there is a carry- if yes: add one to next upper byte.
+    addwf   twenty_four_result + 1
+    movlw .1		;checks for the double carry when addting to mid-upper byte.
+    btfsc STATUS, C
+    addwf twenty_four_result
+    return
     
     
     
