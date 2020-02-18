@@ -3,7 +3,6 @@
     global  LCD_Setup, LCD_Write_Message, LCD_Write_Hex
     global  LCD_Clear, LCD_Write_Line1, LCD_Write_Line2, LCD_Send_Byte_D, LCD_Set, LCD_Delay_Write
     global  LCD_High_Limit, LCD_Low_Limit
-    global  LCD_delay_ms
     extern  Keyboard_Read
     extern Delay_Time
     global LCD_Delay_Write 
@@ -139,7 +138,7 @@ LCD_Clear
 	movlw b'00000001'
 	call LCD_Send_Byte_I
 	
-;myTable	    set	    " D-TIME:\n"	; message, plus carriage return
+;myTable	    data	" D-TIME:\n"	; message, plus carriage return
 ;		    constant    myTable_l=.9	; length of data
 myTable	    da  " D-TIME:\n", 0
 myTable_1   set	    .9
@@ -189,6 +188,7 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
 	decfsz	counter		; count down to zero
 	bra	loop		; keep going until finished
+	
 	movlw	myTable_l-1	; output message to LCD (leave out "\n")
 	lfsr	FSR2, myArray
 	call	LCD_Write_Message
