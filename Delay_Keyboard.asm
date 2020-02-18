@@ -1,9 +1,11 @@
 #include p18f87k22.inc		;Use PORTJ for the keyboard
     
     global Keyboard_Setup, Keyboard_Read, Store_Decode, Delay_Time, Keyboard_Initial
-    extern LCD_Clear
+    extern LCD_Clear, LCD_High_Limit, LCD_Low_Limit
     extern LCD_Delay_Write
-    
+    extern Dec_to_Hex_Converter_Delay
+    extern Converted_Delay_Time
+
 acs0    udata_acs	; named variables in access ram
 cnt_l   res 1		; reserve 1 byte for variable cnt_l
 cnt_h   res 1		; reserve 1 byte for variable cnt_h
@@ -20,19 +22,20 @@ temp_decode res 1
 temp_counter res 1
  
 temp_press res 1
+temp_limit res 1
 
 
  
 Delay_Keyboard    code
     
 Keyboard_Setup
-    setf    TRISE			    ;rotuine to set PORTJ to tri-state
+    setf    TRISF			    ;rotuine to set PORTJ to tri-state
     banksel PADCFG1    
     bsf	    PADCFG1, REPU, BANKED
     movlb   0x00			    
-    clrf    LATE
+    clrf    LATF
     movlw   0x0F			    ; Sets J4-7 to output/J0-3 to input
-    movwf   TRISE
+    movwf   TRISF
     movlw   .125			    ; Delay time/4
     call    delay_x4us		    ; Delay of 0.5ms
     return
@@ -50,18 +53,18 @@ Keyboard_Initial
     
 Keyboard_Read			    ;originally set to read rows- unsure of column- diagram given in slides.
     call    Keyboard_Setup
-    movlw   .15
-    movff   PORTE, temp_press	    ;This checks whether a button has been pressed so we can proceed with rest of program.
+    movlw   .155
+    movff   PORTF, temp_press	    ;This checks whether a button has been pressed so we can proceed with rest of program.
     subwf   temp_press
     movlw   .0
     cpfsgt  temp_press
     goto    Keyboard_Read
-    movff   PORTE, Row_Read	    
+    movff   PORTF, Row_Read	    
     movlw   0xF0
-    movwf   TRISE
+    movwf   TRISF
     movlw   .50
     call    delay_ms		    ;Delay of 0.5ms
-    movff   PORTE, Col_Read
+    movff   PORTF, Col_Read
     movlw   .50
     call    delay_ms
     movf    Row_Read, W
@@ -74,7 +77,19 @@ Keyboard_Read			    ;originally set to read rows- unsure of column- diagram give
     movlw   .250	    ;This delay limits speed of press- ensures cant go back to top with same button press. This would get through the button press check. 
     call    delay_ms
     call    Keyboard_Write ; To complete loop.
+    ;Can only get here with 4 valid inuts
     call    LCD_Delay_Write
+    call    Dec_to_Hex_Converter_Delay
+    
+    call    Check_High_Limit
+    
+    call    Check_Low_Limit
+    
+    ;;;Check if value is greater than 2000 or less than 50
+    ;output messsage telling them why its wrong- output- wait 5 seconds- clear bottom line of LCD
+    ;Make them enter agin- call keyboard intiial, go to keyboard Read
+    
+    
     call    Wait_loop
     
     return
@@ -143,7 +158,7 @@ Check_4_Row
 	movlw	0xFF
 	btfss	Full_Read, 0
 	goto	Keyboard_Clear	    	    ; C will clear the input value - go to C subroutine to clear adresses in the LCD, i.e. clears the delay time 
-	movwf	Decode_Value
+	movwf	Decode_Value		    ;This is fucked.
 	return
 
 Keyboard_Write		    ;Lost loop to write to successive DDRAM addresses - initialise address- send data, increment address
@@ -169,6 +184,39 @@ Keyboard_Write		    ;Lost loop to write to successive DDRAM addresses - initiali
 	return
 	goto Keyboard_Read
 	
+Check_High_Limit
+	movff    Converted_Delay_Time, temp_limit	    ;Block to check if input is greater than 2000.
+	movlw   0x07
+	subwf   temp_limit
+	btfsc	STATUS, N
+	return
+	movff	Converted_Delay_Time +1, temp_limit
+	movlw	0xD0
+	subwf	temp_limit
+	btfsc	STATUS, N
+	return
+	btfsc	STATUS, Z
+	return
+	call	Limit_Reset
+	return
+
+Check_Low_Limit
+	movff   Converted_Delay_Time, temp_limit	    ;Block to check if input is less than 50.	
+	movlw   0x32
+	subwf   temp_limit
+	btfsc	STATUS, N
+	return
+	btfsc	STATUS, Z
+	return
+	call	LCD_Low_Limit
+	call    Limit_Reset
+	return
+
+Limit_Reset
+	call Keyboard_Initial
+	goto Keyboard_Read
+	
+
 Keyboard_Clear
 	call Keyboard_Initial
 	call LCD_Clear
