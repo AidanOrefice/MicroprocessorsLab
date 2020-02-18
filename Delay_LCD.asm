@@ -1,7 +1,8 @@
 #include p18f87k22.inc
 
     global  LCD_Setup, LCD_Write_Message, LCD_Write_Hex
-    global  LCD_Clear, LCD_Write_Line1, LCD_Write_Line2, LCD_Send_Byte_D, LCD_Preset, LCD_Delay_Write 
+    global  LCD_Clear, LCD_Write_Line1, LCD_Write_Line2, LCD_Send_Byte_D, LCD_Set, LCD_Delay_Write
+    global  LCD_High_Limit, LCD_Low_Limit
     global  LCD_delay_ms
     extern  Keyboard_Read
     extern Delay_Time
@@ -137,14 +138,44 @@ LCD_Enable	    ; pulse enable bit LCD_E for 500ns
 LCD_Clear 
 	movlw b'00000001'
 	call LCD_Send_Byte_I
-	call LCD_Preset
+	
+;myTable	    set	    " D-TIME:\n"	; message, plus carriage return
+;		    constant    myTable_l=.9	; length of data
+myTable	    da  " D-TIME:\n", 0
+myTable_1   set	    .9
+	call LCD_Write_Line1
+	call LCD_Set
 	return
 	
-myTable data	    " D-TIME:\n"	; message, plus carriage return
-	constant    myTable_l=.9	; length of data
+LCD_High_Limit
+;myTable	    set	    " ERROR: TOO HIGH"	; message, plus carriage return
+;		    constant    myTable_l=.16	; length of data
+myTable	    da  " ERROR: TOO HIGH\n", 0
+myTable_1   set	    .16
+	call LCD_Write_Line2
+	call LCD_Set
+	movlw .255
+	call LCD_delay_ms
+	call LCD_Clear
+	return
 	
-LCD_Preset
-	call	LCD_Write_Line1
+LCD_Low_Limit
+;myTable	    set	    " ERROR: TOO LOW"	; message, plus carriage return
+;		    constant    myTable_l=.16	; length of data
+myTable	    da  " ERROR: TOO LOW\n", 0
+myTable_1   set	    .15	
+	call LCD_Write_Line2
+	call LCD_Set
+	movlw .255
+	call LCD_delay_ms
+	call LCD_Clear
+	return
+	
+	
+	
+LCD_Set
+	;Prior to calling- need to specificy- myTable and which line to go to.
+	;call	LCD_Write_Line1
 	lfsr	FSR0, myArray	; Load FSR0 with address in RAM	
 	movlw	upper(myTable)	; address of data in PM
 	movwf	TBLPTRU		; load upper bits to TBLPTRU
