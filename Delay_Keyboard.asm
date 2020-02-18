@@ -5,11 +5,10 @@
     extern LCD_Delay_Write
     extern Dec_to_Hex_Converter_Delay
     extern Converted_Delay_Time
+    extern  delay_ms, delay_x4us 
+    
 
 acs0    udata_acs	; named variables in access ram
-cnt_l   res 1		; reserve 1 byte for variable cnt_l
-cnt_h   res 1		; reserve 1 byte for variable cnt_h
-cnt_ms   res 1		; reserve 1 byte for variable cnt_ms
 Row_Read res 1		; reserve 1 byte for Row value
 Col_Read res 1		; reserve 1 byte for Column value
 Full_Read res 1		; reserve 1 byte for the total value
@@ -223,3 +222,5 @@ Keyboard_Clear
 	goto Keyboard_Read
 	
 ; ONLY DELAYS PAST THIS POINT 
+
+    end

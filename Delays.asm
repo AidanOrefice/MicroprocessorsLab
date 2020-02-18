@@ -1,8 +1,15 @@
 #include p18f87k22.inc
 
-global delay_ms, delay_x4us 
+    global delay_ms, delay_x4us 
 
+	
+acs0    udata_acs	; named variables in access ram
+cnt_l   res 1		; reserve 1 byte for variable cnt_l
+cnt_h   res 1		; reserve 1 byte for variable cnt_h
+cnt_ms   res 1		; reserve 1 byte for variable cnt_ms
     
+Delays	code   
+
     
 delay_ms			; delay given in ms in W
 	movwf	cnt_ms
