@@ -69,7 +69,7 @@ FRAM_Init  ;Clearing all configuration registers.
 
 SPI_FRAM_Write
     ;FSR1 - Address of Write Buffer
-    ;FSR2 - Get Address of which to write to.
+    ;FSR2 - Get Address of what we want to write- ADRESH:ADRESL?
     
     bcf	    PORTC, CS_FRAM1_Pin	;selects chip.
     ;movf    SSP1BUF, W		;Reading buffer to W- Reading to clear
@@ -90,7 +90,25 @@ SPI_FRAM_Write
     bra	    $-1
     clrf    SSP1BUF
     
-    ;CAN THIS BE SEEN ON GITHUB??
+    movff   POSTDEC2, SSP1BUF		;MSB of addres to output buffer.
+    btfss   SSP1STAT, BF
+    bra	    $-1
+    clrf    SSP1BUF
+
+    movff   INDF2, SSP1BUF		;LSB of address to output buffer
+    btfss   SSP1STAT, BF
+    bra	    $-1
+    clrf    SSP1BUF
+    
+    movff   INDF1, SSPBUF
+    btfss   SSP1STAT, BF
+    bra	    $-1
+    clrf    SSP1BUF
+
+
+    BSF   PORTC,CCS_FRAM1_Pin      ;Deselect device
+
+    return
     
     
     
