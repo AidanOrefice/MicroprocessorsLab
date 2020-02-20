@@ -10,7 +10,7 @@ cnt_ms   res 1		; reserve 1 byte for variable cnt_ms
     
 Delays	code   
 
-    
+   
 delay_ms			; delay given in ms in W
 	movwf	cnt_ms
 	call DL2
