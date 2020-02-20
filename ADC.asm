@@ -1,6 +1,9 @@
 #include p18f87k22.inc
 
-    global  ADC_Setup, ADC_Read
+    global  ADC_Setup, ADC_Read, ADC_Signal
+    
+acs0    udata_acs	; named variables in access ram
+ADC_Signal res 1
     
 ADC    code
     
@@ -20,6 +23,20 @@ ADC_Read
 adc_loop
     btfsc   ADCON0,GO	    ; check to see if finished
     bra	    adc_loop
+    bcf	    PIR1, ADIF
     return
 
+ADC_Reduce  ;Store ADC as a byte value.
+    movff   ADRESH, ADC_Signal
+    swapf   ADC_Signal
+    RRCF    ADRESL, 0
+    RRCF    WREG, 0
+    RRCF    WREG, 0
+    RRCF    WREG, 0
+    addwf   ADC_Signal
+    return
+    
+   
+    
+    
     end

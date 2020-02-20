@@ -95,7 +95,7 @@ Keyboard_Read			    ;originally set to read rows- unsure of column- diagram give
     return
     
 Wait_loop    
-    btfss   PORTJ, 7
+    btfss   PORTA, 3
     return
     goto Wait_loop
     

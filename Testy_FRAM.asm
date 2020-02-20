@@ -12,7 +12,7 @@
 ;acs_ovr	access_ovr  ;temporary varibales
 
 ;************ FRAM PORT ASSIGNMENTS **************************************	    
-	    Constant CS_FRAM1_Pin = 1	;Chip select is on E.
+	    Constant CS_FRAM1_Pin = 0	;Chip select is on C.
 	    Constant CD_FRAM2_Pin = 2
 	    
 ;************ FRAM CHIP OPCODES **************************************	    
@@ -61,12 +61,12 @@ FRAM_Init  ;Clearing all configuration registers.
     bsf	    TRISC, SDI1		;SDI is an input
     bcf	    TRISC, SDO1		;SDO is an output 
     
-    bcf	    SSP2STAT, CKE		;idle to active clock state transmission.
-    bsf	    SSP2STAT, SMP
+    bcf	    SSP1STAT, CKE		;idle to active clock state transmission.
+    bsf	    SSP1STAT, SMP
     
     ;MSSP enable; CKP=1; SPI master, clock=Fosc/64 (1MHz)- check FRAM can use these settings
     movlw   (1<<SSPEN)|(1<<CKP)|(0x02)
-    movwf   SSP2CON1
+    movwf   SSP1CON1
     return
 
 SPI_FRAM_Write
@@ -74,39 +74,39 @@ SPI_FRAM_Write
     ;FSR2 - Address where we want to put on FRAM- set as next available.
     
     bcf	    PORTE, CS_FRAM1_Pin	;selects chip.
-    movf    SSP2BUF, W		;Reading buffer to W- Reading to clear
+    bcf    PIR1, SSP1IF		;Reading buffer to W- Reading to clear
 
     
 	    movlw   F_WREN		;write enable command
-	    movwf   SSP2BUF
-WEOP_Loop   btfss   SSP2STAT, BF
+	    movwf   SSP1BUF
+WEOP_Loop   btfss   PIR1, SSP1IF
 	    bra	    WEOP_Loop
-	    movf    SSP2BUF, W			;clearing status flag
+	    bcf    PIR1, SSP1IF			;clearing status flag
     
     ;bsf	    PORTE, CS_FRAM1_Pin	;Toggling CS so we can send a new opcode.
     ;bcf	    PORTE, CS_FRAM1_Pin
     
 	    movlw   F_WRITE
-	    movwf   SSP2BUF
-WOP_Loop    btfss   SSP2STAT, BF
+	    movwf   SSP1BUF
+WOP_Loop    btfss   PIR1, SSP1IF
 	    bra	    WOP_Loop
-	    movf    SSP2BUF, W			;clearing status flag
+	    bcf    PIR1, SSP1IF		;clearing status flag
     
-	    movff   POSTDEC2, SSP2BUF		;MSB of addres to output buffer.
-Reg1_Loop   btfss   SSP2STAT, BF
-	    bra	    Reg1_Loop
-	    movf    SSP2BUF, W			;clearing status flag
+;	    movff   POSTDEC2, SSP1BUF		;MSB of addres to output buffer.
+;Reg1_Loop   btfss   PIR1, SSP1IF
+;	    bra	    Reg1_Loop
+;	    bcf    PIR1, SSP1IF			;clearing status flag
 
-	    movff   INDF2, SSP2BUF		;LSB of address to output buffer
-Reg2_Loop   btfss   SSP2STAT, BF
+	    movff   INDF2, SSP1BUF		;LSB of address to output buffer
+Reg2_Loop   btfss   PIR1, SSP1IF
 	    bra	    Reg2_Loop
-	    movf    SSP2BUF, W			;clearing status flag
+	    bcf    PIR1, SSP1IF			;clearing status flag
 
 
-	    movff   INDF1, SSP2BUF
-W_Loop	    btfss   SSP2STAT, BF
+	    movff   INDF1, SSP1BUF
+W_Loop	    btfss   PIR1, SSP1IF
 	    bra	    W_Loop
-	    movf    SSP2BUF, W			;clearing status flag
+	    bcf    PIR1, SSP1IF			;clearing status flag
 
 
     bsf   PORTE,CS_FRAM1_Pin      ;Deselect device
@@ -117,30 +117,31 @@ SPI_FRAM_Read
     ;FSR0- address to read from FRAM (+1- 2byte address)
     
 	    bcf	  PORTE, CS_FRAM1_Pin		;select the chip
-	    movf  SSP2BUF, W			;clearing status flag
+	    bcf    PIR1, SSP1IF			;clearing status flag
 
 	    movlw   F_READ
-	    movwf   SSP2BUF
-ROP_Loop    btfss   SSP2STAT, BF
+	    movwf   SSP1BUF
+ROP_Loop    btfss   PIR1, SSP1IF
 	    bra	    ROP_Loop
-	    movf    SSP2BUF, W
+	    bcf    PIR1, SSP1IF
 
-	    movff   POSTDEC0, SSP2BUF		;MSB of addres to output buffer.
-R_Reg1_Loop btfss   SSP2STAT, BF
-	    bra	    R_Reg1_Loop
-	    movf    SSP2BUF, W			;clearing status flag
+;	    movff   POSTDEC0, SSP1BUF		;MSB of addres to output buffer.
+;R_Reg1_Loop btfss   PIR1, SSP1IF
+;	    bra	    R_Reg1_Loop
+;	    bcf    PIR1, SSP1IF			;clearing status flag
 
-	    movff   INDF0, SSP2BUF		;LSB of address to output buffer
-R_Reg2_Loop btfss   SSP2STAT, BF
+	    movff   INDF0, SSP1BUF		;LSB of address to output buffer
+R_Reg2_Loop btfss   PIR1, SSP1IF
 	    bra	    R_Reg2_Loop
-	    movf    SSP2BUF, W			;clearing status flag
+	    bcf    PIR1, SSP1IF			;clearing status flag
 
-	    movwf   SSP2BUF, W
-R_Loop	    btfss   SSP2STAT, BF
+	    movwf   SSPBUF, W
+R_Loop	    btfss   PIR1, SSP1IF
 	    bra	    R_Loop
 
     bsf   PORTE,CS_FRAM1_Pin      ;Deselect device
     return
 
     end
-;
+
+
