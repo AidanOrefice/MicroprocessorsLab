@@ -68,18 +68,18 @@ FRAM_Init  ;Clearing all configuration registers.
     return
 
 SPI_FRAM_Write
-    ;FSR1 - Address of Write Buffer
-    ;FSR2 - Get Address of what we want to write- ADRESH:ADRESL?
+    ;FSR1 - Data we want written
+    ;FSR2 - Address where we want to put on FRAM- set as next available.
     
     bcf	    PORTC, CS_FRAM1_Pin	;selects chip.
-    ;movf    SSP1BUF, W		;Reading buffer to W- Reading to clear
-    clrf    SSP1BUF		;is this the same thing????
+    movf    SSP1BUF, W		;Reading buffer to W- Reading to clear
+
     
     movlw   F_WREN		;write enable command
     movwf   SSP1BUF, W
     btfss   SSP1STAT, BF
     bra	    $-1
-    clrf    SSP1BUF
+    movf    SSP1BUF, W			;clearing status flag
     
     bsf	    PORTC, CS_FRAM1_Pin	;Toggling CS so we can send a new opcode.
     bcf	    PORTC, CS_FRAM1_Pin
@@ -88,29 +88,57 @@ SPI_FRAM_Write
     movwf   SSP1BUF
     btfss   SSP1STAT, BF
     bra	    $-1
-    clrf    SSP1BUF
+    movf    SSP1BUF, W			;clearing status flag
     
     movff   POSTDEC2, SSP1BUF		;MSB of addres to output buffer.
     btfss   SSP1STAT, BF
     bra	    $-1
-    clrf    SSP1BUF
+    movf    SSP1BUF, W			;clearing status flag
 
     movff   INDF2, SSP1BUF		;LSB of address to output buffer
     btfss   SSP1STAT, BF
     bra	    $-1
-    clrf    SSP1BUF
+    movf    SSP1BUF, W			;clearing status flag
     
-    movff   INDF1, SSPBUF
+    
+    movff   INDF1, SSP1BUF
     btfss   SSP1STAT, BF
     bra	    $-1
-    clrf    SSP1BUF
+    movf    SSP1BUF, W			;clearing status flag
 
 
-    BSF   PORTC,CCS_FRAM1_Pin      ;Deselect device
+    bsf   PORTC,CS_FRAM1_Pin      ;Deselect device
 
     return
     
+SPI_FRAM_Read
+    ;FSR0- address to read from FRAM (+1- 2byte address)
     
+    bcf	  PORTC, CS_FRAM1_PIN		;select the chip
+    movf  SSP1BUF, W			;clearing status flag
+       
+    movlw   F_READ
+    movwf   SSP1BUF
+    btfss   SSP1STAT, BF
+    bra	    $-1
+    movf    SSP1BUF, W
+
+    movff   POSTDEC0, SSP1BUF		;MSB of addres to output buffer.
+    btfss   SSP1STAT, BF
+    bra	    $-1
+    movf    SSP1BUF, W			;clearing status flag
+
+    movff   INDF0, SSP1BUF		;LSB of address to output buffer
+    btfss   SSP1STAT, BF
+    bra	    $-1
+    movf    SSP1BUF, W			;clearing status flag
     
+    movwf   SSPBUF, W
+    btfss   SSP1STAT, BF
+    bra	    $-1
+     
+    bsf   PORTC,CS_FRAM1_Pin      ;Deselect device
+    return
+
     end
 ;
