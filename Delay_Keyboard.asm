@@ -28,13 +28,13 @@ temp_limit res 1
 Delay_Keyboard    code
     
 Keyboard_Setup
-    setf    TRISE			    ;rotuine to set PORTJ to tri-state
+    setf    TRISJ			    ;rotuine to set PORTJ to tri-state
     banksel PADCFG1    
     bsf	    PADCFG1, REPU, BANKED
     movlb   0x00			    
-    clrf    LATE
+    clrf    LATJ
     movlw   0x0F			    ; Sets J4-7 to output/J0-3 to input
-    movwf   TRISE
+    movwf   TRISJ
     movlw   .125			    ; Delay time/4
     call    delay_x4us		    ; Delay of 0.5ms
     return
@@ -47,23 +47,23 @@ Keyboard_Initial
     movlw .4			    ;So we can write to 4byte Decide Value
     movwf temp_counter
     
-    lfsr    FSR0, Delay_Time	    ;loads FSR to point to Delay_Time varibale
+    lfsr    FSR1, Delay_Time	    ;loads FSR to point to Delay_Time varibale
     return
     
 Keyboard_Read			    ;originally set to read rows- unsure of column- diagram given in slides.
     call    Keyboard_Setup
     movlw   .155
-    movff   PORTE, temp_press	    ;This checks whether a button has been pressed so we can proceed with rest of program.
+    movff   PORTJ, temp_press	    ;This checks whether a button has been pressed so we can proceed with rest of program.
     subwf   temp_press
     movlw   .0
     cpfsgt  temp_press
     goto    Keyboard_Read
-    movff   PORTE, Row_Read	    
+    movff   PORTJ, Row_Read	    
     movlw   0xF0
-    movwf   TRISE
+    movwf   TRISJ
     movlw   .50
     call    delay_ms		    ;Delay of 0.5ms
-    movff   PORTE, Col_Read
+    movff   PORTJ, Col_Read
     movlw   .50
     call    delay_ms
     movf    Row_Read, W
@@ -87,14 +87,13 @@ Keyboard_Read			    ;originally set to read rows- unsure of column- diagram give
     ;;;Check if value is greater than 2000 or less than 50
     ;output messsage telling them why its wrong- output- wait 5 seconds- clear bottom line of LCD
     ;Make them enter agin- call keyboard intiial, go to keyboard Read
-    
-    
+     
     call    Wait_loop
     
     return
     
 Wait_loop    
-    btfss   PORTJ, 7
+    btfss   PORTA, 3
     return
     goto Wait_loop
     
@@ -177,25 +176,26 @@ Keyboard_Write		    ;Lost loop to write to successive DDRAM addresses - initiali
 	;cpfsgt	temp_decode		    
 	;goto	Keyboard_Read
 	
-	movff Store_Decode, POSTINC0
+	movff Store_Decode, POSTINC1
 	
 	dcfsnz temp_counter
 	return
 	goto Keyboard_Read
 	
-Check_High_Limit
-	movff    Converted_Delay_Time, temp_limit	    ;Block to check if input is greater than 2000.
+Check_High_Limit 
+	movff    Converted_Delay_Time, temp_limit	    ;Block to check if input is greater than 2000. (7D0)
 	movlw   0x07
 	subwf   temp_limit
 	btfsc	STATUS, N
 	return
 	movff	Converted_Delay_Time +1, temp_limit
 	movlw	0xD0
-	subwf	temp_limit
+	subwf	temp_limit	;cpfsgt???
 	btfsc	STATUS, N
 	return
 	btfsc	STATUS, Z
 	return
+	call	LCD_High_Limit
 	call	Limit_Reset
 	return
 
@@ -203,7 +203,7 @@ Check_Low_Limit
 	movff   Converted_Delay_Time, temp_limit	    ;Block to check if input is less than 50.	
 	movlw   0x32
 	subwf   temp_limit
-	btfsc	STATUS, N
+	btfsc	STATUS, N	;cpfsgt??
 	return
 	btfsc	STATUS, Z
 	return

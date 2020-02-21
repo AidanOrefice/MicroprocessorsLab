@@ -1,10 +1,10 @@
 #include p18f87k22.inc
 
     global  LCD_Setup, LCD_Write_Message, LCD_Write_Hex
-    global  LCD_Clear, LCD_Write_Line1, LCD_Write_Line2, LCD_Send_Byte_D, LCD_Set, LCD_Delay_Write
+    global  LCD_Clear, LCD_Write_Line1, LCD_Write_Line2, LCD_Send_Byte_D, LCD_Delay_Write
     global  LCD_High_Limit, LCD_Low_Limit
     extern  Keyboard_Read
-    extern Delay_Time
+    extern Delay_Time, delay_ms,  delay_x4us 
     global LCD_Delay_Write 
 	
 acs0    udata_acs   ; named variables in access ram
@@ -31,31 +31,31 @@ LCD_Setup
 	movlw   b'11000000'	    ; RB0:5 all outputs
 	movwf	TRISB
 	movlw   .40
-	call	LCD_delay_ms	; wait 40ms for LCD to start up properly
+	call	delay_ms	; wait 40ms for LCD to start up properly
 	movlw	b'00110000'	; Function set 4-bit
 	call	LCD_Send_Byte_I
 	movlw	.10		; wait 40us
-	call	LCD_delay_x4us
+	call	delay_x4us
 	movlw	b'00101000'	; 2 line display 5x8 dot characters
 	call	LCD_Send_Byte_I
 	movlw	.10		; wait 40us
-	call	LCD_delay_x4us
+	call	delay_x4us
 	movlw	b'00101000'	; repeat, 2 line display 5x8 dot characters
 	call	LCD_Send_Byte_I
 	movlw	.10		; wait 40us
-	call	LCD_delay_x4us
+	call	delay_x4us
 	movlw	b'00001111'	; display on, cursor on, blinking on
 	call	LCD_Send_Byte_I
 	movlw	.10		; wait 40us
-	call	LCD_delay_x4us
+	call	delay_x4us
 	movlw	b'00000001'	; display clear
 	call	LCD_Send_Byte_I
 	movlw	.2		; wait 2ms
-	call	LCD_delay_ms
+	call	delay_ms
 	movlw	b'00000110'	; entry mode incr by 1 no shift
 	call	LCD_Send_Byte_I
 	movlw	.10		; wait 40us
-	call	LCD_delay_x4us
+	call	delay_x4us
 	return
 
 LCD_Write_Hex			; Writes byte stored in W as hex
@@ -111,7 +111,7 @@ LCD_Send_Byte_D		    ; Transmits byte stored in W to data reg
 	bsf	LATB, LCD_RS    ; Data write set RS bit	    
         call    LCD_Enable  ; Pulse enable Bit 
 	movlw	.10	    ; delay 40us
-	call	LCD_delay_x4us
+	call	delay_x4us
 	return
 
 LCD_Enable	    ; pulse enable bit LCD_E for 500ns
@@ -138,64 +138,94 @@ LCD_Clear
 	movlw b'00000001'
 	call LCD_Send_Byte_I
 	
-;myTable	    data	" D-TIME:\n"	; message, plus carriage return
-;		    constant    myTable_l=.9	; length of data
-myTable	    da  " D-TIME:\n", 0
-myTable_1   set	    .9
+myTableC     data  " D-TIME:\n"
+	     constant myTable_C1  = .9
 	call LCD_Write_Line1
-	call LCD_Set
+	;Prior to calling- need to specificy- myTable and which line to go to.
+	;call	LCD_Write_Line1
+	lfsr	FSR0, myArray	; Load FSR0 with address in RAM	
+	movlw	upper(myTableC)	; address of data in PM
+	movwf	TBLPTRU		; load upper bits to TBLPTRU
+	movlw	high(myTableC)	; address of data in PM
+	movwf	TBLPTRH		; load high byte to TBLPTRH
+	movlw	low(myTableC)	; address of data in PM
+	movwf	TBLPTRL		; load low byte to TBLPTRL
+	movlw	myTable_C1	; bytes to read
+	movwf 	counter		; our counter register
+loopC 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
+	movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
+	decfsz	counter		; count down to zero
+	bra	loopC		; keep going until finished
+	
+	movlw	myTable_C1 -1	; output message to LCD (leave out "\n")
+	lfsr	FSR2, myArray
+	call	LCD_Write_Message
 	return
 	
 LCD_High_Limit
 ;myTable	    set	    " ERROR: TOO HIGH"	; message, plus carriage return
 ;		    constant    myTable_l=.16	; length of data
-myTable	    da  " ERROR: TOO HIGH\n", 0
-myTable_1   set	    .16
+myTableHL     data  " ERROR: TOO HIGH\n"
+	      constant myTable_HL1  = .9
 	call LCD_Write_Line2
-	call LCD_Set
+	;Prior to calling- need to specificy- myTable and which line to go to.
+	;call	LCD_Write_Line1
+	lfsr	FSR0, myArray	; Load FSR0 with address in RAM	
+	movlw	upper(myTableHL)	; address of data in PM
+	movwf	TBLPTRU		; load upper bits to TBLPTRU
+	movlw	high(myTableHL)	; address of data in PM
+	movwf	TBLPTRH		; load high byte to TBLPTRH
+	movlw	low(myTableHL)	; address of data in PM
+	movwf	TBLPTRL		; load low byte to TBLPTRL
+	movlw	myTable_HL1	; bytes to read
+	movwf 	counter		; our counter register
+loopHL 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
+	movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
+	decfsz	counter		; count down to zero
+	bra	loopHL		; keep going until finished
+	
+	movlw	myTable_HL1 -1	; output message to LCD (leave out "\n")
+	lfsr	FSR2, myArray
+	call	LCD_Write_Message
+	
+	
+	
 	movlw .255
-	call LCD_delay_ms
+	call delay_ms
 	call LCD_Clear
 	return
 	
 LCD_Low_Limit
 ;myTable	    set	    " ERROR: TOO LOW"	; message, plus carriage return
 ;		    constant    myTable_l=.16	; length of data
-myTable	    da  " ERROR: TOO LOW\n", 0
-myTable_1   set	    .15	
+myTableLL     data  " ERROR: TOO LOW\n"
+	      constant myTable_LL1  = .9
 	call LCD_Write_Line2
-	call LCD_Set
+		;Prior to calling- need to specificy- myTable and which line to go to.
+	;call	LCD_Write_Line1
+	lfsr	FSR0, myArray	; Load FSR0 with address in RAM	
+	movlw	upper(myTableLL)	; address of data in PM
+	movwf	TBLPTRU		; load upper bits to TBLPTRU
+	movlw	high(myTableLL)	; address of data in PM
+	movwf	TBLPTRH		; load high byte to TBLPTRH
+	movlw	low(myTableLL)	; address of data in PM
+	movwf	TBLPTRL		; load low byte to TBLPTRL
+	movlw	myTable_LL1	; bytes to read
+	movwf 	counter		; our counter register
+loopLL 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
+	movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
+	decfsz	counter		; count down to zero
+	bra	loopLL		; keep going until finished
+	
+	movlw	myTable_LL1 -1	; output message to LCD (leave out "\n")
+	lfsr	FSR2, myArray
+	call	LCD_Write_Message
 	movlw .255
-	call LCD_delay_ms
+	call delay_ms
 	call LCD_Clear
 	return
 	
-	
-	
-LCD_Set
-	;Prior to calling- need to specificy- myTable and which line to go to.
-	;call	LCD_Write_Line1
-	lfsr	FSR0, myArray	; Load FSR0 with address in RAM	
-	movlw	upper(myTable)	; address of data in PM
-	movwf	TBLPTRU		; load upper bits to TBLPTRU
-	movlw	high(myTable)	; address of data in PM
-	movwf	TBLPTRH		; load high byte to TBLPTRH
-	movlw	low(myTable)	; address of data in PM
-	movwf	TBLPTRL		; load low byte to TBLPTRL
-	movlw	myTable_l	; bytes to read
-	movwf 	counter		; our counter register
-loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
-	movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
-	decfsz	counter		; count down to zero
-	bra	loop		; keep going until finished
-	
-	movlw	myTable_l-1	; output message to LCD (leave out "\n")
-	lfsr	FSR2, myArray
-	call	LCD_Write_Message
-	
-	return
-	
-
+		
 LCD_Write_Line1			    
 	movlw b'10000000'	    ;Address is 1000.... for top line
 	call LCD_Send_Byte_I	    
@@ -228,34 +258,6 @@ LCD_Delay_Write
 	call LCD_Write_Hex
 	
 	return
-	
-; ** a few delay routines below here as LCD timing can be quite critical ****
-LCD_delay_ms		    ; delay given in ms in W
-	movwf	LCD_cnt_ms
-lcdlp2	movlw	.250	    ; 1 ms delay
-	call	LCD_delay_x4us	
-	decfsz	LCD_cnt_ms
-	bra	lcdlp2
-	return
-    
-LCD_delay_x4us		    ; delay given in chunks of 4 microsecond in W
-	movwf	LCD_cnt_l   ; now need to multiply by 16
-	swapf   LCD_cnt_l,F ; swap nibbles
-	movlw	0x0f	    
-	andwf	LCD_cnt_l,W ; move low nibble to W
-	movwf	LCD_cnt_h   ; then to LCD_cnt_h
-	movlw	0xf0	    
-	andwf	LCD_cnt_l,F ; keep high nibble in LCD_cnt_l
-	call	LCD_delay
-	return
-
-LCD_delay			; delay routine	4 instruction loop == 250ns	    
-	movlw 	0x00		; W=0
-lcdlp1	decf 	LCD_cnt_l,F	; no carry when 0x00 -> 0xff
-	subwfb 	LCD_cnt_h,F	; no carry when 0x00 -> 0xff
-	bc 	lcdlp1		; carry, then loop again
-	return			; carry reset so return
-
 
     end
 
