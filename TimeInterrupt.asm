@@ -1,6 +1,6 @@
 #include p18f87k22.inc
 	
-		extern Converted_delay_time
+		extern Converted_Delay_Time
 		global time_set, Delay_Trig_Setup
 
 acs0    udata_acs
@@ -28,7 +28,7 @@ Delay_Trig_Setup
 	
 ;F_osc = 64MHz, F_osc/4 = 16Mhz, /256 interrupt every ~64kHz, so apply per-scaler of 1:64 to give 1kHz interrupt. i.e interrupt every 1ms
 
-Delay_Check	;if Converted_delay_time == de;ay_count-  sets time_set <0> to one.
+Delay_Check	;if Converted_Delay_Time == de;ay_count-  sets time_set <0> to one.
 		;check if same length as our timer- using 1 ms delays
 		incf	temp_count +1
 		btfsc	STATUS, C
@@ -37,11 +37,11 @@ Delay_Check	;if Converted_delay_time == de;ay_count-  sets time_set <0> to one.
 		movff	temp_count, temp_delay_time
 		movff	temp_count + 1, temp_delay_time + 1
 		
-		movf	Converted_delay_time, W
+		movf	Converted_Delay_Time, W
 		subwf	temp_delay_time
 		btfss	STATUS, Z
 		return
-		movf	Converted_delay_time +1, W
+		movf	Converted_Delay_Time +1, W
 		subwf	temp_delay_time
 		btfss	STATUS, Z
 		return
