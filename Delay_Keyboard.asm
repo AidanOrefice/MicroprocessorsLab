@@ -82,14 +82,14 @@ Keyboard_Read			    ;originally set to read rows- unsure of column- diagram give
     call    LCD_Delay_Write
     call    Dec_to_Hex_Converter_Delay
     
-    call    Check_High_Limit
+    ;call    Check_High_Limit
     
-    call    Check_Low_Limit
+    ;call    Check_Low_Limit
     
     ;;;Check if value is greater than 2000 or less than 50
     ;output messsage telling them why its wrong- output- wait 5 seconds- clear bottom line of LCD
     ;Make them enter agin- call keyboard intiial, go to keyboard Read
-Wait_Loop   btfsc   PORTA,3
+Wait_Loop   btfsc   PORTA, 3
 	    goto    Wait_Loop
     
     

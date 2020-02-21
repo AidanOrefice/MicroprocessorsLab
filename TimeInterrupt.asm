@@ -9,7 +9,7 @@ temp_count res 2
 temp_delay_time res 2
     
 Interrupt_High	code	0x0008
-		btfss	INTCON, TMR0IF
+		btfsc	INTCON, TMR0IF
 		retfie	FAST
 		call	Delay_Check
 		btfsc	time_set, 0
@@ -38,13 +38,11 @@ Delay_Check	;if Converted_Delay_Time == de;ay_count-  sets time_set <0> to one.
 		movff	temp_count, temp_delay_time
 		movff	temp_count + 1, temp_delay_time + 1
 		
-		movf	Converted_Delay_Time, W
-		subwf	temp_delay_time
-		btfss	STATUS, Z
+		movf	Converted_Delay_Time+1, W
+		cpfseq	temp_delay_time+1
 		return
-		movf	Converted_Delay_Time +1, W
-		subwf	temp_delay_time
-		btfss	STATUS, Z
+		movf	Converted_Delay_Time, W
+		cpfseq	temp_delay_time, W
 		return
 		bsf	time_set, 0
 		return

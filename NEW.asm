@@ -19,6 +19,15 @@ rst code    0	;reset vector
 main code
  
 Setup
+    banksel ANCON0
+    bsf	    ANCON0, ANSEL0
+    bcf	    ANCON0, ANSEL3
+    bcf	    ANCON0, ANSEL4
+    banksel 0
+    bsf	    TRISA, 3
+    bcf	    TRISA, 5
+    bsf	    PORTA, 5
+    
     call    LCD_Setup		;Setup of LCD, Keyboard, ADC, Keybaord
     
     movlw   .25 
@@ -55,11 +64,7 @@ Setup
     call    delay_ms   
     call    Delay_Trig_Setup
     clrf    TRISF		;PORTF is the data output.
-    
-    bsf	    TRISA, 3
-    bcf	    TRISA, 5
-    bsf	    PORTA, 5
-    
+       
 Initial_Loop
     call    ADC_Read
     movff   ADC_Signal, POSTINC0

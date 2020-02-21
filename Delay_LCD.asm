@@ -58,6 +58,7 @@ LCD_Setup
 	call	LCD_Send_Byte_I
 	movlw	.10		; wait 40us
 	call	delay_x4us
+	
 	return
 
 LCD_Write_Hex			; Writes byte stored in W as hex

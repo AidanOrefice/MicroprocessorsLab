@@ -15,11 +15,11 @@
       <itemPath>ADC.asm</itemPath>
       <itemPath>Delays.asm</itemPath>
       <itemPath>config.asm</itemPath>
-      <itemPath>NEW.asm</itemPath>
       <itemPath>TimeInterrupt.asm</itemPath>
       <itemPath>Delay_Keyboard.asm</itemPath>
       <itemPath>Delay_LCD.asm</itemPath>
       <itemPath>Multiplier.asm</itemPath>
+      <itemPath>NEW.asm</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
