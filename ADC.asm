@@ -24,6 +24,7 @@ adc_loop
     btfsc   ADCON0,GO	    ; check to see if finished
     bra	    adc_loop
     bcf	    PIR1, ADIF
+    call ADC_Reduce
     return
 
 ADC_Reduce  ;Store ADC as a byte value.

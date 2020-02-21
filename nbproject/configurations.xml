@@ -13,12 +13,13 @@
                    displayName="Source Files"
                    projectFiles="true">
       <itemPath>ADC.asm</itemPath>
-      <itemPath>Main.asm</itemPath>
       <itemPath>Delays.asm</itemPath>
       <itemPath>config.asm</itemPath>
-      <itemPath>FRAM.asm</itemPath>
       <itemPath>NEW.asm</itemPath>
       <itemPath>TimeInterrupt.asm</itemPath>
+      <itemPath>Delay_Keyboard.asm</itemPath>
+      <itemPath>Delay_LCD.asm</itemPath>
+      <itemPath>Multiplier.asm</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

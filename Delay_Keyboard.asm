@@ -1,15 +1,14 @@
-#include p18f87k22.inc		;Use PORTJ for the keyboard
+#include p18f87k22.inc		;Use PORTE for the keyboard
     
     global Keyboard_Setup, Keyboard_Read, Store_Decode, Delay_Time, Keyboard_Initial
     extern LCD_Clear, LCD_High_Limit, LCD_Low_Limit
     extern LCD_Delay_Write
     extern Dec_to_Hex_Converter_Delay
     extern Converted_Delay_Time
+    extern  delay_ms, delay_x4us 
+    
 
 acs0    udata_acs	; named variables in access ram
-cnt_l   res 1		; reserve 1 byte for variable cnt_l
-cnt_h   res 1		; reserve 1 byte for variable cnt_h
-cnt_ms   res 1		; reserve 1 byte for variable cnt_ms
 Row_Read res 1		; reserve 1 byte for Row value
 Col_Read res 1		; reserve 1 byte for Column value
 Full_Read res 1		; reserve 1 byte for the total value
@@ -48,17 +47,14 @@ Keyboard_Initial
     movlw .4			    ;So we can write to 4byte Decide Value
     movwf temp_counter
     
-    lfsr    FSR0, Delay_Time	    ;loads FSR to point to Delay_Time varibale
+    lfsr    FSR1, Delay_Time	    ;loads FSR to point to Delay_Time varibale
     return
     
 Keyboard_Read			    ;originally set to read rows- unsure of column- diagram given in slides.
     call    Keyboard_Setup
-    movlw   .155
-    movff   PORTE, temp_press	    ;This checks whether a button has been pressed so we can proceed with rest of program.
-    subwf   temp_press
-    movlw   .0
-    cpfsgt  temp_press
-    goto    Keyboard_Read
+    movlw   .15
+    cpfslt  PORTE
+    goto    $-2
     movff   PORTE, Row_Read	    
     movlw   0xF0
     movwf   TRISE
@@ -78,6 +74,11 @@ Keyboard_Read			    ;originally set to read rows- unsure of column- diagram give
     call    delay_ms
     call    Keyboard_Write ; To complete loop.
     ;Can only get here with 4 valid inuts
+    
+    tstfsz  temp_counter
+    goto    Keyboard_Read
+ 
+    
     call    LCD_Delay_Write
     call    Dec_to_Hex_Converter_Delay
     
@@ -88,19 +89,12 @@ Keyboard_Read			    ;originally set to read rows- unsure of column- diagram give
     ;;;Check if value is greater than 2000 or less than 50
     ;output messsage telling them why its wrong- output- wait 5 seconds- clear bottom line of LCD
     ;Make them enter agin- call keyboard intiial, go to keyboard Read
-    
-    
-    call    Wait_loop
-    
-    return
-    
-Wait_loop    
-    btfss   PORTA, 3
-    return
-    goto Wait_loop
+Wait_Loop   btfsc   PORTA,3
+	    goto    Wait_Loop
     
     
     return
+    
 				;Check_1_row: Check rows of column 1
 Keyboard_Decode			; subroutine to decode by column first - remember the keyboard follows anti-logic
 	btfss	Full_Read, 7	; if column one is not set we skip. amd vice versa 
@@ -166,10 +160,10 @@ Keyboard_Write		    ;Lost loop to write to successive DDRAM addresses - initiali
 	
 	movlw	.255		;stops no input
 	cpfslt	Full_Read
-	goto	Keyboard_Read
+	return
 	movlw	.255
 	cpfslt	Decode_Value	;stops invalid answer
-	goto	Keyboard_Read
+	return
 	movff	Decode_Value, Store_Decode
 	
 	;movf	Store_Decode, W		;store_decode- wont ever be greater than ee. 
@@ -178,25 +172,26 @@ Keyboard_Write		    ;Lost loop to write to successive DDRAM addresses - initiali
 	;cpfsgt	temp_decode		    
 	;goto	Keyboard_Read
 	
-	movff Store_Decode, POSTINC0
+	movff Store_Decode, POSTINC1
 	
-	dcfsnz temp_counter
+	decf temp_counter
 	return
-	goto Keyboard_Read
+	;goto Keyboard_Read
 	
-Check_High_Limit
-	movff    Converted_Delay_Time, temp_limit	    ;Block to check if input is greater than 2000.
+Check_High_Limit 
+	movff    Converted_Delay_Time, temp_limit	    ;Block to check if input is greater than 2000. (7D0)
 	movlw   0x07
 	subwf   temp_limit
 	btfsc	STATUS, N
 	return
 	movff	Converted_Delay_Time +1, temp_limit
 	movlw	0xD0
-	subwf	temp_limit
+	subwf	temp_limit	;cpfsgt???
 	btfsc	STATUS, N
 	return
 	btfsc	STATUS, Z
 	return
+	call	LCD_High_Limit
 	call	Limit_Reset
 	return
 
@@ -204,7 +199,7 @@ Check_Low_Limit
 	movff   Converted_Delay_Time, temp_limit	    ;Block to check if input is less than 50.	
 	movlw   0x32
 	subwf   temp_limit
-	btfsc	STATUS, N
+	btfsc	STATUS, N	;cpfsgt??
 	return
 	btfsc	STATUS, Z
 	return
@@ -223,3 +218,5 @@ Keyboard_Clear
 	goto Keyboard_Read
 	
 ; ONLY DELAYS PAST THIS POINT 
+
+    end
