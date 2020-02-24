@@ -82,10 +82,9 @@ Keyboard_Read			    ;originally set to read rows- unsure of column- diagram give
     call    LCD_Delay_Write
     call    Dec_to_Hex_Converter_Delay
     
-    ;call    Check_High_Limit
-    
-    ;call    Check_Low_Limit
-    
+    goto    Check_High_Limit
+LowCheck    
+    goto    Check_Low_Limit
     ;;;Check if value is greater than 2000 or less than 50
     ;output messsage telling them why its wrong- output- wait 5 seconds- clear bottom line of LCD
     ;Make them enter agin- call keyboard intiial, go to keyboard Read
@@ -178,35 +177,46 @@ Keyboard_Write		    ;Lost loop to write to successive DDRAM addresses - initiali
 	return
 	;goto Keyboard_Read
 	
-Check_High_Limit 
+Check_High_Limit ;Check if input is greater than set value. value of 120ms - change to input in setup.
 	movff    Converted_Delay_Time, temp_limit	    ;Block to check if input is greater than 2000. (7D0)
-	movlw   0x07
-	subwf   temp_limit
-	btfsc	STATUS, N
-	return
-	movff	Converted_Delay_Time +1, temp_limit
-	movlw	0xD0
-	subwf	temp_limit	;cpfsgt???
-	btfsc	STATUS, N
-	return
-	btfsc	STATUS, Z
-	return
+	movlw   0x03
+	cpfseq	Converted_Delay_Time
+	goto	Check_High_Top_Byte
+	
+	movlw	0xE8
+	cpfsgt	Converted_Delay_Time +1
+	goto	LowCheck
 	call	LCD_High_Limit
-	call	Limit_Reset
-	return
+	goto	Limit_Reset
 
+
+Check_High_Top_Byte
+	movlw	0x03
+	cpfsgt	Converted_Delay_Time
+	goto	LowCheck
+	
+	call	LCD_High_Limit
+	goto	Limit_Reset
+	
+	
 Check_Low_Limit
-	movff   Converted_Delay_Time, temp_limit	    ;Block to check if input is less than 50.	
-	movlw   0x32
-	subwf   temp_limit
-	btfsc	STATUS, N	;cpfsgt??
-	return
-	btfsc	STATUS, Z
-	return
+	movlw	0x00
+	cpfseq	Converted_Delay_Time
+	goto	Check_Low_Top_Byte
+	
+	movlw   0x0A
+	cpfslt	Converted_Delay_Time + 1
+	goto	Wait_Loop			    ;passed test- within limit
 	call	LCD_Low_Limit
-	call    Limit_Reset
-	return
+	goto    Limit_Reset
 
+Check_Low_Top_Byte
+	movlw	0x00
+	cpfslt	Converted_Delay_Time
+	goto	Wait_Loop
+	call	LCD_Low_Limit
+	goto	Limit_Reset
+	
 Limit_Reset
 	call Keyboard_Initial
 	goto Keyboard_Read

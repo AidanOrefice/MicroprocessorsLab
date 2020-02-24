@@ -5,8 +5,8 @@
      extern  LCD_Setup, LCD_Clear
      extern  Converted_Delay_Time
      extern  ADC_Setup, ADC_Read, ADC_Signal
-     extern  time_set,  Delay_Trig_Setup
-     extern  delay_ms
+     extern  time_set,  reset_int_values, TimeInt_Setup
+     extern  delay_ms, sample_delay
  
 acs0    udata_acs	; named variables in access ram
 RAM_Position res 2
@@ -25,6 +25,7 @@ Setup
     bcf	    ANCON0, ANSEL4
     banksel 0
     bsf	    TRISA, 3
+    bcf	    TRISA, 4
     bcf	    TRISA, 5
     bsf	    PORTA, 5
     
@@ -62,15 +63,19 @@ Setup
         
     movlw   .25 
     call    delay_ms   
-    call    Delay_Trig_Setup
-    clrf    TRISF		;PORTF is the data output.
+    call    TimeInt_Setup
        
 Initial_Loop
+    ;bsf	    INTCON, GIE
     call    ADC_Read
     movff   ADC_Signal, POSTINC0
     
     btfsc   PORTA, 3	    ;Testing if switch has been flicked to input new delay time.
     goto    Key_Reset    ;If switch is set, reset system with new input.
+    
+    call    sample_delay
+    nop	    ; three no operation lines to extend the run-time to match the main loop.
+    nop
     
     btfss   time_set, 0
     goto    Initial_Loop    ;Keep reading
@@ -78,22 +83,24 @@ Initial_Loop
     movff   FSR0L, RAM_Position + 1
     call    Reset_System
     goto    Main_Delay
-    
-Main_Delay    
-    bcf	    PORTA, 5	;Diabling WR
+Main_Delay    ;potentially turn off interrupts in this area
+    ;bcf	    INTCON, GIE
+    bcf	    PORTA, 5	;Diabling WR- hold low for 40ns
     rrcf    INDF0, 0
-    movwf   PORTF
+    movwf   PORTD
     bsf	    PORTA, 5	;Enabling WR- driving through DAC.
     call    ADC_Read
     movff   ADC_Signal, POSTINC0
     
+    call sample_delay
+    
     btfsc   PORTA, 3
     goto    Key_Reset
     
-    movf    RAM_Position + 1
+    movf    RAM_Position + 1, W
     cpfseq  FSR0L
     goto    Main_Delay
-    movf    RAM_Position
+    movf    RAM_Position, W
     cpfseq  FSR0H
     goto    Main_Delay
     
@@ -108,6 +115,7 @@ Key_Reset   ;Don't put a return so runs down to Reset_System.
     call    Keyboard_Initial
     call    Keyboard_Read
     call    Reset_System
+    bsf	    INTCON, GIE
     goto    Initial_Loop
     
 Reset_System   
@@ -117,7 +125,7 @@ Reset_System
     movff   Initial_RAM_Position + 1, FSR0L
     movff   Initial_RAM_Position, FSR0H;Setting start point of memory reading
     bcf	    time_set,0
-    call    Delay_Trig_Setup ;reset delay time counter
+    call    reset_int_values
     return
     
     end

@@ -9,20 +9,23 @@ temp_count res 2
 temp_delay_time res 2
     
 Interrupt_High	code	0x0008
-		btfsc	INTCON, TMR0IF
+		btfss	INTCON, TMR0IF
 		retfie	FAST
-		call	Delay_Check
-		btfsc	time_set, 0
-		call	reset_values
+		;call	Delay_Check
+		;btfsc	time_set, 0
+		;call	reset_values
+		incf	PORTF
 		bcf	INTCON, TMR0IF
 		retfie	FAST
 		
 Delay_Trig	code
 Delay_Trig_Setup
-		call	reset_values
-		clrf	time_set
-		movlw	b'11000101'	    ;1ms interrupt.- shoud be.
-		bsf	INTCON2, TMR0IP	;set as high priority
+		;call	reset_values
+		;clrf	time_set
+		;movlw	b'11000101'	    ;1ms interrupt.- shoud be.
+		movlw	b'10000111'
+		movwf	T0CON
+		;bsf	INTCON2, TMR0IP	;set as high priority
 		bsf	INTCON, TMR0IE	;enabling timer interrupt
 		bsf	INTCON, GIE	;enabling global interrupts
 		return

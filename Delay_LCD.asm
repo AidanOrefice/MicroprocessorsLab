@@ -141,8 +141,8 @@ LCD_Clear
 	movlw b'00000001'
 	call LCD_Send_Byte_I
 	
-myTableC     data  " D-TIME:\n"
-	     constant myTable_C1  = .9
+myTableC     data  "D-TIME:\n"
+	     constant myTable_C1  = .8
 	call LCD_Write_Line1
 	;Prior to calling- need to specificy- myTable and which line to go to.
 	;call	LCD_Write_Line1
@@ -172,8 +172,8 @@ loopC 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 LCD_High_Limit
 ;myTable	    set	    " ERROR: TOO HIGH"	; message, plus carriage return
 ;		    constant    myTable_l=.16	; length of data
-myTableHL     data  " ERROR: TOO HIGH\n"
-	      constant myTable_HL1  = .9
+myTableHL     data  "ERROR: TOO HIGH\n"
+	      constant myTable_HL1  = .16
 	call LCD_Write_Line2
 	    
 	movlw   .25 
@@ -202,14 +202,25 @@ loopHL 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	
 	movlw .255
 	call delay_ms
+	movlw .255
+	call delay_ms
+	movlw .255
+	call delay_ms
+	movlw .255
+	call delay_ms
+	movlw .255
+	call delay_ms
+	movlw .255
+	call delay_ms
+	
 	call LCD_Clear
 	return
 	
 LCD_Low_Limit
 ;myTable	    set	    " ERROR: TOO LOW"	; message, plus carriage return
 ;		    constant    myTable_l=.16	; length of data
-myTableLL     data  " ERROR: TOO LOW\n"
-	      constant myTable_LL1  = .9
+myTableLL     data  "ERROR: TOO LOW\n"
+	      constant myTable_LL1  = .15
 	call LCD_Write_Line2
 	    
 	movlw   .25 
@@ -233,8 +244,21 @@ loopLL 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	movlw	myTable_LL1 -1	; output message to LCD (leave out "\n")
 	lfsr	FSR2, myArray
 	call	LCD_Write_Message
+	
 	movlw .255
 	call delay_ms
+	movlw .255
+	call delay_ms
+	movlw .255
+	call delay_ms
+	movlw .255
+	call delay_ms
+	movlw .255
+	call delay_ms
+	movlw .255
+	call delay_ms
+	
+	
 	call LCD_Clear
 	return
 	
