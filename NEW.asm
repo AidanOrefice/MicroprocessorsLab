@@ -24,6 +24,7 @@ Setup
     bcf	    ANCON0, ANSEL3
     bcf	    ANCON0, ANSEL4
     banksel 0
+    bsf	    TRISA, 0
     bsf	    TRISA, 3
     bcf	    TRISA, 4
     bcf	    TRISA, 5
@@ -84,18 +85,17 @@ Initial_Loop
     call    Reset_System
     goto    Main_Delay
 Main_Delay    ;potentially turn off interrupts in this area
-    ;bcf	    INTCON, GIE
+    
     bcf	    PORTA, 5	;Diabling WR- hold low for 40ns
-    rrcf    INDF0, 0
-    movwf   PORTD
+    movff   INDF0,PORTD
     bsf	    PORTA, 5	;Enabling WR- driving through DAC.
     call    ADC_Read
     movff   ADC_Signal, POSTINC0
     
     call sample_delay
     
-    btfsc   PORTA, 3
-    goto    Key_Reset
+    ;btfsc   PORTA, 3
+    ;goto    Key_Reset
     
     movf    RAM_Position + 1, W
     cpfseq  FSR0L
@@ -103,8 +103,9 @@ Main_Delay    ;potentially turn off interrupts in this area
     movf    RAM_Position, W
     cpfseq  FSR0H
     goto    Main_Delay
-    
+  
     call    Reset_System
+    
     goto    Main_Delay
     
     
@@ -118,8 +119,14 @@ Key_Reset   ;Don't put a return so runs down to Reset_System.
     bsf	    INTCON, GIE
     goto    Initial_Loop
     
-Reset_System   
-    movlw   0x40    ;sets initial position
+Reset_System
+    banksel ANCON0
+    bsf	    ANCON0, ANSEL0
+    bcf	    ANCON0, ANSEL3
+    bcf	    ANCON0, ANSEL4
+    banksel 0
+    
+    movlw   0x60    ;sets initial position- away from FSRs
     movwf   Initial_RAM_Position + 1
     clrf    Initial_RAM_Position
     movff   Initial_RAM_Position + 1, FSR0L

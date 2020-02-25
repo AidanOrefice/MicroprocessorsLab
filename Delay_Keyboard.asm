@@ -179,11 +179,11 @@ Keyboard_Write		    ;Lost loop to write to successive DDRAM addresses - initiali
 	
 Check_High_Limit ;Check if input is greater than set value. value of 120ms - change to input in setup.
 	movff    Converted_Delay_Time, temp_limit	    ;Block to check if input is greater than 2000. (7D0)
-	movlw   0x03
+	movlw   0x01
 	cpfseq	Converted_Delay_Time
 	goto	Check_High_Top_Byte
 	
-	movlw	0xE8
+	movlw	0xF4
 	cpfsgt	Converted_Delay_Time +1
 	goto	LowCheck
 	call	LCD_High_Limit
@@ -191,7 +191,7 @@ Check_High_Limit ;Check if input is greater than set value. value of 120ms - cha
 
 
 Check_High_Top_Byte
-	movlw	0x03
+	movlw	0x01
 	cpfsgt	Converted_Delay_Time
 	goto	LowCheck
 	

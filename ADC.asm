@@ -1,9 +1,11 @@
 #include p18f87k22.inc
 
     global  ADC_Setup, ADC_Read, ADC_Signal
+    extern  quick_delay
     
 acs0    udata_acs	; named variables in access ram
-ADC_Signal res 1
+ADC_Signal  res 1
+temp_shift  res 1
     
 ADC    code
     
@@ -29,12 +31,38 @@ adc_loop
 
 ADC_Reduce  ;Store ADC as a byte value.
     movff   ADRESH, ADC_Signal
+    movlw   0x1F		    ;;; selecting 5 lsbs
+    andwf   ADC_Signal, F	    ;;;
+    bcf	    STATUS, C
+    rrcf    ADC_Signal, F	; bit stored in carry bit
     swapf   ADC_Signal
-    RRCF    ADRESL, 0
-    RRCF    WREG, 0
-    RRCF    WREG, 0
-    RRCF    WREG, 0
-    addwf   ADC_Signal
+    call    quick_delay
+    movff   ADRESL, temp_shift
+    call    quick_delay
+    RRCF    temp_shift, F	;shifts through the carry register, need to clear it everytime.
+    call    quick_delay		;5 shifts
+    bcf	    STATUS, C
+    call    quick_delay
+    RRCF    temp_shift, F
+    call    quick_delay
+    bcf	    STATUS, C
+    call    quick_delay
+    RRCF    temp_shift, F
+    call    quick_delay
+    bcf	    STATUS, C
+    call    quick_delay
+    RRCF    temp_shift, F
+    call    quick_delay
+    bcf	    STATUS, C
+    call    quick_delay
+    RRCF    temp_shift, F
+    call    quick_delay
+    bcf	    STATUS, C
+    call    quick_delay
+    movf    temp_shift, W   ;stroing in 
+    addwf   ADC_Signal, F
+    movlw   0x80	    ;adding an offset of 128
+    addwf   ADC_Signal, F
     return
     
    
