@@ -6,12 +6,12 @@ These programs are all written in Assembly code.
 
 Important Files:
 
-Main.asm
-Keyboard.asm
-LCD.asm
-ADC.asm
-Time_Interrupt.asm
-Delays.asm
+Main.asm,
+Keyboard.asm,
+LCD.asm,
+ADC.asm,
+Time_Interrupt.asm,
+Delays.asm,
 Multiplier.asm
 
 
