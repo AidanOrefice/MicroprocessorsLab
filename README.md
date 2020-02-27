@@ -1,12 +1,18 @@
-# Microprocessors
-Repository for Physics Year 3 microprocessors lab
+# Guitar Pedal Project - Microprocessor Lab
 
-A simple assembly program for PIC18 microprocessor, that counts to 100, putting the current count value out onto PORTB
+Repository for Physics Year 3 microprocessors lab, for the design and production of Digital Delay guitar pedal.
 
-Reads a table (message) from programme memory to data memory
+These programs are all written in Assembly code.
 
-Initialises UART and writes a message (the table) to UART 
+Important Files:
 
-Initialises LCD and writes the message to the LCD
+Main.asm
+Keyboard.asm
+LCD.asm
+ADC.asm
+Time_Interrupt.asm
+Delays.asm
+Multiplier.asm
 
-Initialises ADC, reads values and display as hex on LCD
+
+
