@@ -2,7 +2,7 @@
 
 Repository for Physics Year 3 microprocessors lab, for the design and production of Digital Delay guitar effect.
 
-These programs are all written in Assembly code.
+These scripts are all written in Assembly code.
 
 Important Files:
 
@@ -15,4 +15,4 @@ Delays.asm,
 Multiplier.asm
 
 
-
+Ensure to include p18f87k22.inc
