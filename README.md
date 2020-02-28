@@ -1,6 +1,6 @@
 # Guitar Pedal Project - Microprocessor Lab
 
-Repository for Physics Year 3 microprocessors lab, for the design and production of Digital Delay guitar pedal.
+Repository for Physics Year 3 microprocessors lab, for the design and production of Digital Delay guitar effect.
 
 These programs are all written in Assembly code.
 
