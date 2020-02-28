@@ -53,5 +53,5 @@ reset_values	clrf	temp_count
 		return
 		
 
-
+bcf hellow world
     end
