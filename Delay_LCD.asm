@@ -14,6 +14,8 @@ LCD_cnt_ms  res 1   ; reserve 1 byte for ms counter
 LCD_tmp	    res 1   ; reserve 1 byte for temporary use
 LCD_counter res 1   ; reserve 1 byte for counting through nessage
 counter	    res 1   ; reserve one byte for a counter variable
+temp_delay  res 1
+	    
 	    
 tables	udata	0x400    ; reserve data anywhere in RAM (here at 0x400)
 myArray res 0x80    ; reserve 128 bytes for message data- in ACCESS
@@ -56,6 +58,7 @@ LCD_Setup
 	call	LCD_Send_Byte_I
 	movlw	.10		; wait 40us
 	call	delay_x4us
+	
 	return
 
 LCD_Write_Hex			; Writes byte stored in W as hex
@@ -138,11 +141,15 @@ LCD_Clear
 	movlw b'00000001'
 	call LCD_Send_Byte_I
 	
-myTableC     data  " D-TIME:\n"
-	     constant myTable_C1  = .9
+myTableC     data  "D-TIME:\n"
+	     constant myTable_C1  = .8
 	call LCD_Write_Line1
 	;Prior to calling- need to specificy- myTable and which line to go to.
 	;call	LCD_Write_Line1
+	    
+	movlw   .25 
+	call    delay_ms   
+	
 	lfsr	FSR0, myArray	; Load FSR0 with address in RAM	
 	movlw	upper(myTableC)	; address of data in PM
 	movwf	TBLPTRU		; load upper bits to TBLPTRU
@@ -165,9 +172,12 @@ loopC 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 LCD_High_Limit
 ;myTable	    set	    " ERROR: TOO HIGH"	; message, plus carriage return
 ;		    constant    myTable_l=.16	; length of data
-myTableHL     data  " ERROR: TOO HIGH\n"
-	      constant myTable_HL1  = .9
+myTableHL     data  "ERROR: TOO HIGH\n"
+	      constant myTable_HL1  = .16
 	call LCD_Write_Line2
+	    
+	movlw   .25 
+	call    delay_ms   
 	;Prior to calling- need to specificy- myTable and which line to go to.
 	;call	LCD_Write_Line1
 	lfsr	FSR0, myArray	; Load FSR0 with address in RAM	
@@ -192,15 +202,29 @@ loopHL 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	
 	movlw .255
 	call delay_ms
+	movlw .255
+	call delay_ms
+	movlw .255
+	call delay_ms
+	movlw .255
+	call delay_ms
+	movlw .255
+	call delay_ms
+	movlw .255
+	call delay_ms
+	
 	call LCD_Clear
 	return
 	
 LCD_Low_Limit
 ;myTable	    set	    " ERROR: TOO LOW"	; message, plus carriage return
 ;		    constant    myTable_l=.16	; length of data
-myTableLL     data  " ERROR: TOO LOW\n"
-	      constant myTable_LL1  = .9
+myTableLL     data  "ERROR: TOO LOW\n"
+	      constant myTable_LL1  = .15
 	call LCD_Write_Line2
+	    
+	movlw   .25 
+	call    delay_ms   
 		;Prior to calling- need to specificy- myTable and which line to go to.
 	;call	LCD_Write_Line1
 	lfsr	FSR0, myArray	; Load FSR0 with address in RAM	
@@ -220,8 +244,21 @@ loopLL 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	movlw	myTable_LL1 -1	; output message to LCD (leave out "\n")
 	lfsr	FSR2, myArray
 	call	LCD_Write_Message
+	
 	movlw .255
 	call delay_ms
+	movlw .255
+	call delay_ms
+	movlw .255
+	call delay_ms
+	movlw .255
+	call delay_ms
+	movlw .255
+	call delay_ms
+	movlw .255
+	call delay_ms
+	
+	
 	call LCD_Clear
 	return
 	
@@ -237,26 +274,35 @@ LCD_Write_Line2
 	return
 
 LCD_Delay_Write 
+	movff	Delay_Time, temp_delay
+	swapf	temp_delay
+	movf	Delay_Time + 1, W
+	addwf	temp_delay
+	
+	
 	movlw b'10001000'	    ;Hard sending a keyboard press 
 	call LCD_Send_Byte_I
-	movf Delay_Time, W
+	    
+	movlw   .25 
+	call    delay_ms  
+	
+	movf temp_delay, W
 	call LCD_Write_Hex
 	
-	movlw b'10001001'	    ;Hard sending a keyboard press 
-	call LCD_Send_Byte_I
-	movf Delay_Time +1, W
-	call LCD_Write_Hex
+	movff	Delay_Time + 2, temp_delay
+	swapf	temp_delay
+	movf	Delay_Time + 3, W
+	addwf	temp_delay
+	
 	
 	movlw b'10001010'	    ;Hard sending a keyboard press 
 	call LCD_Send_Byte_I
-	movf Delay_Time +2, W
-	call LCD_Write_Hex
+		   
+	movlw   .25 
+	call    delay_ms  
 	
-	movlw b'10001011'	    ;Hard sending a keyboard press 
-	call LCD_Send_Byte_I
-	movf Delay_Time+3, W
+	movf temp_delay, W
 	call LCD_Write_Hex
-	
 	return
 
     end

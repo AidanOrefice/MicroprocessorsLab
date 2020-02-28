@@ -204,8 +204,9 @@ Dec_to_Hex_Converter_Delay
     mulwf   Delay_Time	+ 3
     call    Delay_Add
     
-    movff   twenty_four_result, Converted_Delay_Time
-    movff   twenty_four_result +1, Converted_Delay_Time +1
+    movff   twenty_four_result+1, Converted_Delay_Time
+    movff   twenty_four_result +2, Converted_Delay_Time +1
+    return
    
     ;Not Required as answer will be less than 9000
     ;movff   twenty_four_result +2, Converted_Delay_Time +2

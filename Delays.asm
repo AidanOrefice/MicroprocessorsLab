@@ -1,6 +1,6 @@
 #include p18f87k22.inc
 
-    global delay_ms, delay_x4us 
+    global delay_ms, delay_x4us, sample_delay, quick_delay
 
 	
 acs0    udata_acs	; named variables in access ram
@@ -41,7 +41,19 @@ DL1	decf 	cnt_l,F		; no carry when 0x00 -> 0xff
 	bc 	DL1		; carry, then loop again
 	return			; carry reset so return
 
+quick_delay
+	nop
+	nop
+	nop
+	nop
+	return
 
+sample_delay
+	movlw	.30		    ;turn off for -100ms
+				    ;30 for 500 ms
+	call	delay_x4us
+	return
+	
     end
     
     

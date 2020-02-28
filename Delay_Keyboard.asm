@@ -1,4 +1,4 @@
-#include p18f87k22.inc		;Use PORTJ for the keyboard
+#include p18f87k22.inc		;Use PORTE for the keyboard
     
     global Keyboard_Setup, Keyboard_Read, Store_Decode, Delay_Time, Keyboard_Initial
     extern LCD_Clear, LCD_High_Limit, LCD_Low_Limit
@@ -28,13 +28,13 @@ temp_limit res 1
 Delay_Keyboard    code
     
 Keyboard_Setup
-    setf    TRISJ			    ;rotuine to set PORTJ to tri-state
+    setf    TRISE			    ;rotuine to set PORTJ to tri-state
     banksel PADCFG1    
     bsf	    PADCFG1, REPU, BANKED
     movlb   0x00			    
-    clrf    LATJ
+    clrf    LATE
     movlw   0x0F			    ; Sets J4-7 to output/J0-3 to input
-    movwf   TRISJ
+    movwf   TRISE
     movlw   .125			    ; Delay time/4
     call    delay_x4us		    ; Delay of 0.5ms
     return
@@ -52,18 +52,15 @@ Keyboard_Initial
     
 Keyboard_Read			    ;originally set to read rows- unsure of column- diagram given in slides.
     call    Keyboard_Setup
-    movlw   .155
-    movff   PORTJ, temp_press	    ;This checks whether a button has been pressed so we can proceed with rest of program.
-    subwf   temp_press
-    movlw   .0
-    cpfsgt  temp_press
-    goto    Keyboard_Read
-    movff   PORTJ, Row_Read	    
+    movlw   .15
+    cpfslt  PORTE
+    goto    $-2
+    movff   PORTE, Row_Read	    
     movlw   0xF0
-    movwf   TRISJ
+    movwf   TRISE
     movlw   .50
     call    delay_ms		    ;Delay of 0.5ms
-    movff   PORTJ, Col_Read
+    movff   PORTE, Col_Read
     movlw   .50
     call    delay_ms
     movf    Row_Read, W
@@ -77,28 +74,26 @@ Keyboard_Read			    ;originally set to read rows- unsure of column- diagram give
     call    delay_ms
     call    Keyboard_Write ; To complete loop.
     ;Can only get here with 4 valid inuts
+    
+    tstfsz  temp_counter
+    goto    Keyboard_Read
+ 
+    
     call    LCD_Delay_Write
     call    Dec_to_Hex_Converter_Delay
     
-    call    Check_High_Limit
-    
-    call    Check_Low_Limit
-    
+    goto    Check_High_Limit
+LowCheck    
+    goto    Check_Low_Limit
     ;;;Check if value is greater than 2000 or less than 50
     ;output messsage telling them why its wrong- output- wait 5 seconds- clear bottom line of LCD
     ;Make them enter agin- call keyboard intiial, go to keyboard Read
-     
-    call    Wait_loop
-    
-    return
-    
-Wait_loop    
-    btfss   PORTA, 3
-    return
-    goto Wait_loop
+Wait_Loop   btfsc   PORTA, 3
+	    goto    Wait_Loop
     
     
     return
+    
 				;Check_1_row: Check rows of column 1
 Keyboard_Decode			; subroutine to decode by column first - remember the keyboard follows anti-logic
 	btfss	Full_Read, 7	; if column one is not set we skip. amd vice versa 
@@ -164,10 +159,10 @@ Keyboard_Write		    ;Lost loop to write to successive DDRAM addresses - initiali
 	
 	movlw	.255		;stops no input
 	cpfslt	Full_Read
-	goto	Keyboard_Read
+	return
 	movlw	.255
 	cpfslt	Decode_Value	;stops invalid answer
-	goto	Keyboard_Read
+	return
 	movff	Decode_Value, Store_Decode
 	
 	;movf	Store_Decode, W		;store_decode- wont ever be greater than ee. 
@@ -178,39 +173,50 @@ Keyboard_Write		    ;Lost loop to write to successive DDRAM addresses - initiali
 	
 	movff Store_Decode, POSTINC1
 	
-	dcfsnz temp_counter
+	decf temp_counter
 	return
-	goto Keyboard_Read
+	;goto Keyboard_Read
 	
-Check_High_Limit 
+Check_High_Limit ;Check if input is greater than set value. value of 120ms - change to input in setup.
 	movff    Converted_Delay_Time, temp_limit	    ;Block to check if input is greater than 2000. (7D0)
-	movlw   0x07
-	subwf   temp_limit
-	btfsc	STATUS, N
-	return
-	movff	Converted_Delay_Time +1, temp_limit
-	movlw	0xD0
-	subwf	temp_limit	;cpfsgt???
-	btfsc	STATUS, N
-	return
-	btfsc	STATUS, Z
-	return
+	movlw   0x01
+	cpfseq	Converted_Delay_Time
+	goto	Check_High_Top_Byte
+	
+	movlw	0xF4
+	cpfsgt	Converted_Delay_Time +1
+	goto	LowCheck
 	call	LCD_High_Limit
-	call	Limit_Reset
-	return
+	goto	Limit_Reset
 
+
+Check_High_Top_Byte
+	movlw	0x01
+	cpfsgt	Converted_Delay_Time
+	goto	LowCheck
+	
+	call	LCD_High_Limit
+	goto	Limit_Reset
+	
+	
 Check_Low_Limit
-	movff   Converted_Delay_Time, temp_limit	    ;Block to check if input is less than 50.	
-	movlw   0x32
-	subwf   temp_limit
-	btfsc	STATUS, N	;cpfsgt??
-	return
-	btfsc	STATUS, Z
-	return
+	movlw	0x00
+	cpfseq	Converted_Delay_Time
+	goto	Check_Low_Top_Byte
+	
+	movlw   0x0A
+	cpfslt	Converted_Delay_Time + 1
+	goto	Wait_Loop			    ;passed test- within limit
 	call	LCD_Low_Limit
-	call    Limit_Reset
-	return
+	goto    Limit_Reset
 
+Check_Low_Top_Byte
+	movlw	0x00
+	cpfslt	Converted_Delay_Time
+	goto	Wait_Loop
+	call	LCD_Low_Limit
+	goto	Limit_Reset
+	
 Limit_Reset
 	call Keyboard_Initial
 	goto Keyboard_Read
