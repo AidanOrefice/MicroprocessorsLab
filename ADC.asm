@@ -1,5 +1,8 @@
 #include p18f87k22.inc
 
+;************ Script to take ADC measurements and manipulate them **************    
+ 
+;Very key script.    
     global  ADC_Setup, ADC_Read, ADC_Signal
     extern  quick_delay
     
@@ -25,17 +28,17 @@ ADC_Read
 adc_loop
     btfsc   ADCON0,GO	    ; check to see if finished
     bra	    adc_loop
-    bcf	    PIR1, ADIF
+    bcf	    PIR1, ADIF	    ;clear AD interrupt flag in periphal interrupt reg.
     call ADC_Reduce
     return
 
-ADC_Reduce  ;Store ADC as a byte value.
+ADC_Reduce  ;Store ADC as a byte value. Plenty of quick delays used to let bits settle.
     movff   ADRESH, ADC_Signal
-    movlw   0x1F		    ;;; selecting 5 lsbs
-    andwf   ADC_Signal, F	    ;;;
+    movlw   0x1F		    ;selecting 5 lsbs of Adresh
+    andwf   ADC_Signal, F	    ;bit 5 inidicates whether negative or not.
     bcf	    STATUS, C
-    rrcf    ADC_Signal, F	; bit stored in carry bit
-    swapf   ADC_Signal
+    rrcf    ADC_Signal, F	    ;rotate right- nibble with negative bit included.
+    swapf   ADC_Signal		    ;swap it around, so compressed ADRESL can be added.
     call    quick_delay
     movff   ADRESL, temp_shift
     call    quick_delay
@@ -57,12 +60,12 @@ ADC_Reduce  ;Store ADC as a byte value.
     call    quick_delay
     RRCF    temp_shift, F
     call    quick_delay
-    bcf	    STATUS, C
+    bcf	    STATUS, C	    ;Only have 3 highest bits of ADRESL left.
     call    quick_delay
-    movf    temp_shift, W   ;stroing in 
+    movf    temp_shift, W   ;stroing in WREG
     addwf   ADC_Signal, F
-    movlw   0x80	    ;adding an offset of 128
-    addwf   ADC_Signal, F
+    movlw   0x80	    ;adding an offset of 128, sets 128 to 'zero'
+    addwf   ADC_Signal, F   ;negative values above and positive above.
     return
     
    

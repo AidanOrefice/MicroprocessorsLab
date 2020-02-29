@@ -1,8 +1,10 @@
 #include p18f87k22.inc
 
+;******** Script which purely contains delays *****************       
+    
+    
     global delay_ms, delay_x4us, sample_delay, quick_delay
-
-	
+    
 acs0    udata_acs	; named variables in access ram
 cnt_l   res 1		; reserve 1 byte for variable cnt_l
 cnt_h   res 1		; reserve 1 byte for variable cnt_h
@@ -41,16 +43,15 @@ DL1	decf 	cnt_l,F		; no carry when 0x00 -> 0xff
 	bc 	DL1		; carry, then loop again
 	return			; carry reset so return
 
-quick_delay
+quick_delay			;Basic delay of 4 instructions.
 	nop
 	nop
 	nop
 	nop
 	return
 
-sample_delay
-	movlw	.30		    ;turn off for -100ms
-				    ;30 for 500 ms
+sample_delay			;Delay to reduce sampling rate to allow larger delays.
+	movlw	.30		
 	call	delay_x4us
 	return
 	

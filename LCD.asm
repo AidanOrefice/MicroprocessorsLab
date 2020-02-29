@@ -1,16 +1,11 @@
 #include p18f87k22.inc
 
-    global  LCD_Setup, LCD_Write_Message, LCD_Write_Hex
-    global  LCD_Clear, LCD_Write_Line1, LCD_Write_Line2, LCD_Send_Byte_D, LCD_Delay_Write
-    global  LCD_High_Limit, LCD_Low_Limit
-    extern  Keyboard_Read
-    extern Delay_Time, delay_ms,  delay_x4us 
-    global LCD_Delay_Write 
-	
+;******** Script holding the routines for the LCD ******************************        
+    
+    global  LCD_Setup, LCD_Clear, LCD_Delay_Write, LCD_High_Limit, LCD_Low_Limit 
+    extern Delay_Time, delay_ms,  delay_x4us, Keyboard_Read 
+    
 acs0    udata_acs   ; named variables in access ram
-LCD_cnt_l   res 1   ; reserve 1 byte for variable LCD_cnt_l
-LCD_cnt_h   res 1   ; reserve 1 byte for variable LCD_cnt_h
-LCD_cnt_ms  res 1   ; reserve 1 byte for ms counter
 LCD_tmp	    res 1   ; reserve 1 byte for temporary use
 LCD_counter res 1   ; reserve 1 byte for counting through nessage
 counter	    res 1   ; reserve one byte for a counter variable
@@ -80,7 +75,7 @@ LCD_Hex_Nib			; writes low nibble as hex character
 	
 LCD_Write_Message	    ; Message stored at FSR2, length stored in W
 	movwf   LCD_counter ;length of data
-LCD_Loop_message
+LCD_Loop_message	    ;loops over counter
 	movf    POSTINC2, W
 	call    LCD_Send_Byte_D
 	decfsz  LCD_counter
@@ -137,15 +132,13 @@ LCD_Enable	    ; pulse enable bit LCD_E for 500ns
 	bcf	    LATB, LCD_E	    ; Writes data to LCD
 	return
 
-LCD_Clear 
+LCD_Clear	;Clears LCD screen.
 	movlw b'00000001'
 	call LCD_Send_Byte_I
 	
-myTableC     data  "D-TIME:\n"
+myTableC     data  "D-TIME:\n"	    ;default delay time message.
 	     constant myTable_C1  = .8
 	call LCD_Write_Line1
-	;Prior to calling- need to specificy- myTable and which line to go to.
-	;call	LCD_Write_Line1
 	    
 	movlw   .25 
 	call    delay_ms   
@@ -169,17 +162,13 @@ loopC 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	call	LCD_Write_Message
 	return
 	
-LCD_High_Limit
-;myTable	    set	    " ERROR: TOO HIGH"	; message, plus carriage return
-;		    constant    myTable_l=.16	; length of data
+LCD_High_Limit		    ;Delay Time high limit message.
 myTableHL     data  "ERROR: TOO HIGH\n"
 	      constant myTable_HL1  = .16
 	call LCD_Write_Line2
 	    
 	movlw   .25 
 	call    delay_ms   
-	;Prior to calling- need to specificy- myTable and which line to go to.
-	;call	LCD_Write_Line1
 	lfsr	FSR0, myArray	; Load FSR0 with address in RAM	
 	movlw	upper(myTableHL)	; address of data in PM
 	movwf	TBLPTRU		; load upper bits to TBLPTRU
@@ -200,7 +189,7 @@ loopHL 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	
 	
 	
-	movlw .255
+	movlw .255	    ;Stays on for 1.5 seconds.
 	call delay_ms
 	movlw .255
 	call delay_ms
@@ -216,17 +205,13 @@ loopHL 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	call LCD_Clear
 	return
 	
-LCD_Low_Limit
-;myTable	    set	    " ERROR: TOO LOW"	; message, plus carriage return
-;		    constant    myTable_l=.16	; length of data
+LCD_Low_Limit		;Default low limit error message.
 myTableLL     data  "ERROR: TOO LOW\n"
 	      constant myTable_LL1  = .15
 	call LCD_Write_Line2
 	    
 	movlw   .25 
 	call    delay_ms   
-		;Prior to calling- need to specificy- myTable and which line to go to.
-	;call	LCD_Write_Line1
 	lfsr	FSR0, myArray	; Load FSR0 with address in RAM	
 	movlw	upper(myTableLL)	; address of data in PM
 	movwf	TBLPTRU		; load upper bits to TBLPTRU
@@ -245,7 +230,7 @@ loopLL 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	lfsr	FSR2, myArray
 	call	LCD_Write_Message
 	
-	movlw .255
+	movlw .255		;Stays on for 1.5 seconds.
 	call delay_ms
 	movlw .255
 	call delay_ms
@@ -263,24 +248,24 @@ loopLL 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	return
 	
 		
-LCD_Write_Line1			    
+LCD_Write_Line1			;Start writing to top line of LCD.    
 	movlw b'10000000'	    ;Address is 1000.... for top line
 	call LCD_Send_Byte_I	    
 	return	
 	
-LCD_Write_Line2
+LCD_Write_Line2			;Start writing to bottom line of LCD.
 	movlw b'11000000'	    ;Address is 1100.... for bottom line
 	call LCD_Send_Byte_I
 	return
 
-LCD_Delay_Write 
-	movff	Delay_Time, temp_delay
-	swapf	temp_delay
+LCD_Delay_Write			;Writing delay time to LCD.
+	movff	Delay_Time, temp_delay	    ;Storing two bytes to one byte.
+	swapf	temp_delay		    ;Both upper nibbles are 0 so trivial.
 	movf	Delay_Time + 1, W
 	addwf	temp_delay
 	
 	
-	movlw b'10001000'	    ;Hard sending a keyboard press 
+	movlw b'10001000'	    ;Hard setting to specific LCD address. 
 	call LCD_Send_Byte_I
 	    
 	movlw   .25 
@@ -289,13 +274,13 @@ LCD_Delay_Write
 	movf temp_delay, W
 	call LCD_Write_Hex
 	
-	movff	Delay_Time + 2, temp_delay
+	movff	Delay_Time + 2, temp_delay  ;2 bytes to one byte again.
 	swapf	temp_delay
 	movf	Delay_Time + 3, W
 	addwf	temp_delay
 	
 	
-	movlw b'10001010'	    ;Hard sending a keyboard press 
+	movlw b'10001010'	    ;Hard setting to specific LCD address. 
 	call LCD_Send_Byte_I
 		   
 	movlw   .25 
